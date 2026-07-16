@@ -1,0 +1,12 @@
+float64[16] htm  # 4x4 homogeneous transform, row-major, relative to panda_link0
+float64 v_scale  # (0-1] fraction of max velocity
+---
+int32 SUCCESS = 0
+int32 FAILURE = 1
+int32 REJECTED = 2
+int32 ABORTED = 3
+bool success
+string error
+---
+float32 progress
+

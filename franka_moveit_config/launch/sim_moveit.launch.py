@@ -112,7 +112,7 @@ def generate_launch_description():
         'franka_moveit_config', 'config/kinematics.yaml'
     )
 
-    # Planning Functionality
+    # Planning Functionality - OMPL pipeline
     ompl_planning_pipeline_config = {
         'move_group': {
             'planning_plugin': 'ompl_interface/OMPLPlanner',
@@ -129,6 +129,7 @@ def generate_launch_description():
         'franka_moveit_config', 'config/ompl_planning.yaml'
     )
     ompl_planning_pipeline_config['move_group'].update(ompl_planning_yaml)
+
 
     # Trajectory Execution Functionality
     moveit_simple_controllers_yaml = load_yaml(
