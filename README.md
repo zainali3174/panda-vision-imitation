@@ -1,22 +1,11 @@
 # multipanda_ros2
-## A sim- and real Panda robot integration based on the `ros2_control` framework
 <img src="docs/images/single_sim.png" alt="" height="250">
-<img src="docs/images/dual_sim.png" alt=""   height="250">
-<img src="docs/images/garmi_sim.png" alt=""  height="250">
 
 This project implements most features from the original `franka_ros` repository in ROS2 Humble, specifically for the Franka Emika Robot (Panda).
 This project significantly expands upon the original `franka_ros2` from the company, who dropped the support for the Pandas.
 
-Additionally, multi-arm mujoco simulation has been integrated, meaning you can now run the same controller on both simulated and real robots. 
-The simulation is designed as a plugin to the [`mujoco_ros_pkg`](https://github.com/ubi-agni/mujoco_ros_pkgs/). 
+**The current version relies on a [fork of the repository](https://github.com/tenfoldpaper/multipanda_ros2)**
 
-**The current version relies on a [fork of the repository](https://github.com/tenfoldpaper/mujoco_ros_pkgs)**, which implements the `ros2_control` plugin as well as a generic `SystemInterface` for simple robot setups (e.g. a Panda arm mounted on a mobile base). This means, you should install the fork, not the original repo, until the two have been merged.
-
-Work is ongoing to integrate FR3 into the architecture.
-
-## Documentation
-
-Documentation for this project is available [here](./docs/main.md).
 
 ## Working features
 More thorough information is available in the documentation.
@@ -40,11 +29,8 @@ More thorough information is available in the documentation.
     * Camera is available as part of `mujoco_ros_pkg`'s features. You can simply add a `<camera>` object in your mujoco XML file, and the package will handle them.
     * With the forked repository's `mujoco_ros2_control_system` package, you can easily add components with additional degrees of freedom to your robot. Take a look at `garmi_packages/garmi_description/robots/*.ros2_control.xacro` for an example on how to do this.
 
-## Known issues
-* Joint position controller might cause some bad motor behaviors. Suggest using torque or velocity for now.
-* The default `franka_moveit_config` package depends on `warehouse_ros_mongo`, which has been deprecated. It has been changed to `warehouse_ros_sqlite` for now to ensure that `rosdep install` works properly. For now, please refer to this discussion [here](https://discourse.ros.org/t/fixing-moveit2-humble-moveit-ros-benchmarks-package/32048) for a potential solution; once a proper solution has been identified, it will be added.
 
-## Installation with One-Click Installer (Recommended)
+## Installation with One-Click Installer
 1. Clone the repository recursively to include **mujoco_ros_pkgs**:
 ```
 git clone --recursive https://github.com/tenfoldpaper/multipanda_ros2.git
@@ -90,91 +76,112 @@ ros2 launch franka_bringup franka_sim.launch.py
     - For RT kernel and robot connection, run
         - `~/Libraries/libfranka/bin/communication_test <robot-ip>`
 
-## Manual Installation Guide (Not recommended)
-(Tested on Ubuntu 22.04, ROS2 Humble, Panda 4.2.2 & 4.2.1, `libfranka` 0.9.2 and MuJoCo 3.2.0)
-On a computer running Ubuntu 22.04 and real-time kernel (if you wish to use it with a real robot), do the following:
-1. Install ROS2 Humble by following their [instructions][humble-instructions] and create a workspace.
-5. Install library dependencies:
-    - Install [Eigen **3.3.9**](https://gitlab.com/libeigen/eigen/-/releases/3.3.9). Remove Eigen 3.4.0 if that was installed from following the `libfranka` steps.
-        - Some functions will break if you use Eigen 3.4.0, and will fail to compile.
-    - Install [`dq-robotics`](https://dqrobotics.github.io/) C++ version
-2. Build `libfranka` 0.9.2 from source: 
-    - Install dependencies: `sudo apt-get install -y build-essential cmake git libpoco-dev  libfmt-dev`
-        - (Ideally, you should already have `build-essential`, `cmake` and `git`already installed)
-    - Clone the `libfranka` repo: `git clone https://github.com/frankaemika/libfranka.git`
-    && mkdir /home/user/Libraries/libfranka \
-    && cd libfranka \
-    - Check out 0.9.2 and update the submodules:
-        ``` bash
-        cd libfranka
-        git checkout 0.9.2 
-        git submodule init 
-        git submodule update 
-        ```
-    - Build the library, and install it to the directory of your choice (here, `~/Libraries/libfranka`)
-        ``` bash
-        mkdir build && cd build
-        cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX=/home/user/Libraries/libfranka ..
-        cmake --build .
-        cmake --install .
-        ```
+## FYP Additions (this fork)
 
-3. Build MuJoCo **3.2.0** (required by `mujoco_ros_pkg`) from source by following the [instructions][mujoco-instructions].
-4. Install `mujoco_ros_pkg`, specifically [this fork](https://github.com/tenfoldpaper/mujoco_ros_pkgs).
-6. Clone this repository (i.e. the multipanda) into your workspace's `src` folder.
-7. Install the dependencies by running this rosdep command from the workspace root: 
-    
-    `rosdep install --from-paths src -y --ignore-src`
-7. Export the `{mujoco/libfranka}/lib/cmake` directories as a `CMAKE_PREFIX_PATH` in your environment, i.e.
-    - in `~/.bashrc`, `export CMAKE_PREFIX_PATH={path to mujoco installation}/lib/cmake:{path to libfranka installation}/lib/cmake`
-8. Add the build path to your `LD_LIBRARY_PATH` by adding the following line to your `~/.bashrc`: 
-    
-    `export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:{path to libfranka install}/lib:{path to mujoco's install}/lib`
-9. Source the workspace, then in your workspace root, call: 
-    
-    `colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release`
-    - The paths to mujoco and libfranka are added to `CMAKE_PREFIX_PATH`, so no separate args are needed.
-    - The MuJoCo path is the INSTALLED folder's directory. The `lib` folder should only have the two `.so` files, and a folder called `cmake`.
-    - Likewise, the `libfranka` path should contain the `cmake` folder and the `.so` files.
-10. To run:
-    - Single arm:
-        1. with real robot, source the workspace, and run:
-            - Default: `ros2 launch franka_bringup franka.launch.py robot_ip:=<fci-ip>`.
-            - Multi-mode: `ros2 launch franka_bringup multimode_franka.launch.py robot_ip:=<fci-ip>`.
-            - `arm_id` is fixed to `panda`.
-        2. for simulated robot, source the workspace, and run:
-            - Default: `ros2 launch franka_bringup franka_sim.launch.py`.
-            - `arm_id` is fixed to `panda`.
-            - Currently, only the robot with gripper attachment is available.
-    - Dual arm:
-        1. with real robot, source the workspace, and run:
-            - Default: `ros2 launch franka_bringup dual_franka.launch.py robot_ip_1:=<robot-1-fci-ip> robot_ip_2:=<robot-2-fci-ip> arm_id_1=<robot-1-name> arm_id_2=<robot-2-name>`.
-            - Multi-mode: `ros2 launch franka_bringup dual_multimode_franka.launch.py robot_ip_1:=<robot-1-fci-ip> robot_ip_2:=<robot-2-fci-ip> arm_id_1=<robot-1-name> arm_id_2=<robot-2-name>`.
-            - There is no default `arm_id`.
-            - Grippers are set to true by default; add `hand_n=false` to disable this.
-        2. for simulated robot, source the workspace, and run:
-            - Default: `ros2 launch franka_bringup dual_franka_sim.launch.py`.
-            - `arm_id_1=mj_left` and `arm_id_2=mj_right` by default.
-    - Garmi (mobile manipulator with two Panda arms):
-        1. for simulated robot, source the workspace, and run:
-            - `ros2 launch garmi_bringup sim_garmi.launch.py`
+This fork extends the base `multipanda_ros2` project with additional packages developed as part of a Final Year Project:
 
-## Citation 
-If multipanda_ros2 framework helps your research, please cite our paper:
+- **`panda_cartesian_control`** — provides Cartesian (XYZ/HTM-based) motion control and pick-and-place orchestration for the Franka arm on top of MoveIt, exposing custom ROS 2 actions (`htm_motion`, `pick_place`) instead of requiring manual RViz interaction.
+- **`panda_cartesian_control_msgs`** — custom action definitions (`HTMMotion`, `PickPlace`) used by the above.
 
-**[Bridging the Sim-to-Real Gap with multipanda_ros2: A Real-Time ROS2 Framework for Multimanual Systems](https://arxiv.org/abs/2602.02269)** 
-
-```bibtex
-@misc{škerlj2026multipanda_ros2,
-      title={Bridging the Sim-to-Real Gap with multipanda_ros2: A Real-Time ROS2 Framework for Multimanual Systems}, 
-      author={Jon Škerlj and Seongjin Bien and Abdeldjallil Naceri and Sami Haddadin},
-      year={2026},
-      eprint={2602.02269},
-      archivePrefix={arXiv},
-      primaryClass={cs.RO},
-      url={[https://arxiv.org/abs/2602.02269](https://arxiv.org/abs/2602.02269)}, 
-}
+### Entering the container
+```bash
+docker exec -it --user developer multipanda-container bash
 ```
+Run all commands below inside the container unless noted otherwise.
+
+### Running IK
+```bash
+# Simulation
+ros2 launch franka_moveit_config sim_moveit.launch.py
+
+# Hardware (fake)
+ros2 launch franka_moveit_config moveit.launch.py robot_ip:=dummy use_fake_hardware:=true
+
+# Hardware (real)
+ros2 launch franka_moveit_config moveit.launch.py robot_ip:=172.16.0.2
+```
+
+### Cartesian IK
+**Simulation**
+```bash
+# Terminal 1
+ros2 launch franka_moveit_config sim_moveit.launch.py
+
+# Terminal 2
+ros2 run panda_cartesian_control cartesian_moveit_server
+
+# Terminal 3
+ros2 action send_goal /cartesian_via_motion panda_motion_generator_msgs/action/CartesianViaMotion "{via_poses: [{position: {x: 0.4, y: 0.0, z: 0.5}, orientation: {x: 1.0, y: 0.0, z: 0.0, w: 0.0}}], v_scale: 0.2}"
+```
+
+**Hardware**
+```bash
+# Terminal 1
+ros2 launch franka_moveit_config moveit.launch.py robot_ip:=172.16.0.2
+
+# Terminal 2
+ros2 run panda_cartesian_control cartesian_moveit_server
+
+# Terminal 3
+ros2 action send_goal /cartesian_via_motion panda_motion_generator_msgs/action/CartesianViaMotion "{via_poses: [{position: {x: 0.4, y: 0.0, z: 0.5}, orientation: {x: 1.0, y: 0.0, z: 0.0, w: 0.0}}], v_scale: 0.2}"
+```
+
+**Checking current end-effector HTM**
+```bash
+ros2 run tf2_ros tf2_echo panda_link0 panda_link8
+```
+
+### HTM Motion
+```bash
+ros2 action send_goal /htm_motion panda_cartesian_control_msgs/action/HTMMotion "{htm: [1,0,0,0.4, 0,-1,0,-0.2, 0,0,-1,0.4, 0,0,0,1], v_scale: 0.2}"
+
+# Corrected orientation
+ros2 action send_goal /htm_motion panda_cartesian_control_msgs/action/HTMMotion "{htm: [0.707,-0.707,0,0.4, -0.707,-0.707,0,-0.2, 0,0,-1,0.4, 0,0,0,1], v_scale: 0.2}"
+```
+
+### Gripper
+```bash
+# Simulation
+ros2 action send_goal /panda_gripper_sim_node/move franka_msgs/action/Move "{width: 0.08, speed: 0.1}"
+
+# Hardware
+# Terminal 1
+ros2 launch franka_moveit_config moveit.launch.py robot_ip:=172.16.0.2 load_gripper:=true
+
+# Terminal 2
+ros2 action send_goal /panda_gripper/move franka_msgs/action/Move "{width: 0.08, speed: 0.1}"
+ros2 action send_goal /panda_gripper/grasp franka_msgs/action/Grasp "{width: 0.05, epsilon: {inner: 0.01, outer: 0.01}, speed: 0.05, force: 20.0}"
+```
+
+### Pick and Place
+**Simulation**
+```bash
+# Terminal 1
+ros2 launch franka_moveit_config sim_moveit.launch.py
+
+# Terminal 2
+ros2 run panda_cartesian_control cartesian_moveit_server
+
+# Terminal 3
+ros2 run panda_cartesian_control pick_place_server --ros-args -p use_sim:=true
+
+# Terminal 4
+ros2 action send_goal /pick_place panda_cartesian_control_msgs/action/PickPlace "{pick_xyz: [0.4, -0.2, 0.3], place_xyz: [0.4, 0.2, 0.3], z_offset: 0.1, grasp_width: 0.05, grasp_force: 20.0}" --feedback
+```
+
+**Hardware**
+```bash
+# Terminal 1
+ros2 launch franka_moveit_config moveit.launch.py robot_ip:=172.16.0.2
+
+# Terminal 2
+ros2 run panda_cartesian_control cartesian_moveit_server
+
+# Terminal 3
+ros2 run panda_cartesian_control pick_place_server --ros-args -p use_sim:=false
+
+# Terminal 4
+ros2 action send_goal /pick_place panda_cartesian_control_msgs/action/PickPlace "{pick_xyz: [0.4, -0.2, 0.3], place_xyz: [0.4, 0.2, 0.3], z_offset: 0.1, grasp_width: 0.05, grasp_force: 20.0}" --feedback
 
 ## Credits
 The original version is forked from mcbed's port of franka_ros2 for [humble][mcbed-humble].
