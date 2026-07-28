@@ -114,7 +114,7 @@ def generate_launch_description():
 
     # Planning Functionality - OMPL pipeline
     ompl_planning_pipeline_config = {
-        'move_group': {
+        'ompl': {
             'planning_plugin': 'ompl_interface/OMPLPlanner',
             'request_adapters': 'default_planner_request_adapters/AddTimeOptimalParameterization '
                                 'default_planner_request_adapters/ResolveConstraintFrames '
@@ -128,9 +128,21 @@ def generate_launch_description():
     ompl_planning_yaml = load_yaml(
         'franka_moveit_config', 'config/ompl_planning.yaml'
     )
-    ompl_planning_pipeline_config['move_group'].update(ompl_planning_yaml)
+    ompl_planning_pipeline_config['ompl'].update(ompl_planning_yaml)
 
-
+    ##### this added on 28,jul,26 (not verified)
+    chomp_planning_pipeline_config = {
+        'chomp': {
+            'planning_plugin': 'chomp_interface/CHOMPPlanner',
+            'request_adapters': 'default_planner_request_adapters/AddTimeOptimalParameterization '
+                                'default_planner_request_adapters/ResolveConstraintFrames '
+                                'default_planner_request_adapters/FixWorkspaceBounds '
+                                'default_planner_request_adapters/FixStartStateBounds '
+                                'default_planner_request_adapters/FixStartStateCollision '
+                                'default_planner_request_adapters/FixStartStatePathConstraints',
+            'start_state_max_bounds_error': 0.1,
+        }
+    }
     # Trajectory Execution Functionality
     moveit_simple_controllers_yaml = load_yaml(
         'franka_moveit_config', 'config/panda_controllers.yaml'
@@ -165,9 +177,12 @@ def generate_launch_description():
             robot_description_semantic,
             kinematics_yaml,
             ompl_planning_pipeline_config,
+            chomp_planning_pipeline_config,
             trajectory_execution,
             moveit_controllers,
             planning_scene_monitor_parameters,
+            {'planning_pipelines': ['ompl', 'chomp']},
+            {'default_planning_pipeline': 'ompl'},
         ],
     )
 
