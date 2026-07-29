@@ -353,6 +353,77 @@ ros2 run panda_cartesian_control pick_place_server --ros-args -p use_sim:=false
 # Terminal 4
 ros2 action send_goal /pick_place panda_cartesian_control_msgs/action/PickPlace "{pick_xyz: [0.4, -0.2, 0.3], place_xyz: [0.4, 0.2, 0.3], z_offset: 0.1, grasp_width: 0.05, grasp_force: 20.0}" --feedback
 ```
+### Adding and Removing obstacle in RViz
+
+Use these commands to add and remove obstacle in RViz. These are not permanent and wont be there if you restart your setup. These obstacles will also not be visible in Mujuco.
+
+**Adding the obstacle**
+```bash
+python3 << 'PYEOF'
+import rclpy
+from rclpy.node import Node
+from moveit_msgs.msg import PlanningScene, CollisionObject
+import time
+
+rclpy.init()
+node = Node('remove_obstacle')
+pub = node.create_publisher(PlanningScene, '/planning_scene', 10)
+
+time.sleep(1.0)
+
+obj = CollisionObject()
+obj.header.frame_id = 'panda_link0'
+obj.id = 'human_obstacle'
+obj.operation = CollisionObject.REMOVE
+
+scene = PlanningScene()
+scene.world.collision_objects.append(obj)
+scene.is_diff = True
+
+for _ in range(3):
+    pub.publish(scene)
+    time.sleep(0.5)
+
+print("Removed collision object")
+node.destroy_node()
+rclpy.shutdown()
+PYEOF
+```
+
+**Removing/ the obstacle**
+```bash
+python3 << 'PYEOF'
+import rclpy
+from rclpy.node import Node
+from moveit_msgs.msg import PlanningScene, CollisionObject
+import time
+
+rclpy.init()
+node = Node('remove_obstacle')
+pub = node.create_publisher(PlanningScene, '/planning_scene', 10)
+
+time.sleep(1.0)
+
+obj = CollisionObject()
+obj.header.frame_id = 'panda_link0'
+obj.id = 'human_obstacle'
+obj.operation = CollisionObject.REMOVE
+
+scene = PlanningScene()
+scene.world.collision_objects.append(obj)
+scene.is_diff = True
+
+for _ in range(3):
+    pub.publish(scene)
+    time.sleep(0.5)
+
+print("Removed collision object")
+node.destroy_node()
+rclpy.shutdown()
+PYEOF
+```
+
+
 
 ## Credits
 
