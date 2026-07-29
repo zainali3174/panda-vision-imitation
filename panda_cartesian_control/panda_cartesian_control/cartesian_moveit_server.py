@@ -6,6 +6,7 @@ from rclpy.action import ActionServer, ActionClient
 from geometry_msgs.msg import PoseStamped
 from moveit_msgs.action import MoveGroup
 from moveit_msgs.msg import Constraints, JointConstraint
+from moveit_msgs.msg import OrientationConstraint
 from moveit_msgs.srv import GetPositionIK
 
 from panda_cartesian_control_msgs.action import HTMMotion
@@ -97,7 +98,7 @@ class CartesianMoveitServer(Node):
 
         return result.solution.joint_state, ''
 
-    def build_joint_goal(self, joint_state, v_scale, pipeline_id, planner_id):
+    def build_joint_goal(self, joint_state, target_pose, v_scale, pipeline_id, planner_id, use_orientation_constraint=False):
         goal = MoveGroup.Goal()
         goal.request.group_name = self.group_name
         goal.request.pipeline_id = pipeline_id
@@ -118,6 +119,23 @@ class CartesianMoveitServer(Node):
                 jc.weight = 1.0
                 constraints.joint_constraints.append(jc)
 
+        if use_orientation_constraint:
+            path_constraints = Constraints()
+
+            oc = OrientationConstraint()
+            oc.header.frame_id = self.base_frame
+            oc.link_name = self.ee_link
+
+            oc.orientation = target_pose.pose.orientation
+
+            oc.absolute_x_axis_tolerance = 0.05
+            oc.absolute_y_axis_tolerance = 0.05
+            oc.absolute_z_axis_tolerance = 3.14
+
+            oc.weight = 1.0
+
+            path_constraints.orientation_constraints.append(oc)
+            goal.request.path_constraints = path_constraints
         goal.request.goal_constraints.append(constraints)
         goal.planning_options.plan_only = False
         return goal
@@ -147,7 +165,7 @@ class CartesianMoveitServer(Node):
             return False, err
 
         # Attempt 1: CHOMP (smooth, consistent, but weaker obstacle avoidance)
-        chomp_goal = self.build_joint_goal(joint_state, v_scale, 'chomp', 'CHOMP')
+        chomp_goal = self.build_joint_goal(joint_state,pose,v_scale,'chomp','CHOMP',use_orientation_constraint=True)
         success, code = self.send_move_goal(chomp_goal)
         if success:
             return True, ''
@@ -156,7 +174,7 @@ class CartesianMoveitServer(Node):
             f'CHOMP failed (error code {code}), falling back to OMPL RRTConnect')
 
         # Attempt 2: OMPL RRTConnect (reliable global obstacle avoidance)
-        ompl_goal = self.build_joint_goal(joint_state, v_scale, 'ompl', 'RRTConnectkConfigDefault')
+        ompl_goal = self.build_joint_goal(joint_state,None,v_scale,'ompl','RRTConnectkConfigDefault',use_orientation_constraint=False)
         success, code = self.send_move_goal(ompl_goal)
         if success:
             return True, ''

@@ -25,12 +25,11 @@ class PickPlaceServer(Node):
 
         self.get_logger().info('Pick-and-place action server ready.')
 
-
     def make_htm(self, xyz):
-        # Fixed pointing-down orientation: rotation = [[1,0,0],[0,-1,0],[0,0,-1]]
+        # Pointing-down orientation, 45deg about Z (matches known-good gripper alignment)
         return [
-            1.0, 0.0, 0.0, xyz[0],
-            0.0, -1.0, 0.0, xyz[1],
+            0.707, -0.707, 0.0, xyz[0],
+            -0.707, -0.707, 0.0, xyz[1],
             0.0, 0.0, -1.0, xyz[2],
             0.0, 0.0, 0.0, 1.0,
         ]
