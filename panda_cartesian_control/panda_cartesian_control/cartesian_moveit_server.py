@@ -59,7 +59,8 @@ class CartesianMoveitServer(Node):
         self._server = ActionServer(
             self, HTMMotion, 'htm_motion', self.execute_callback)
 
-        self.get_logger().info('HTM MoveIt action server ready (KDL IK + CHOMP planner).')
+        self.get_logger().info(
+            'HTM MoveIt action server ready (KDL IK + CHOMP, fallback to OMPL RRTConnect).')
 
     def htm_to_pose_stamped(self, htm):
         rot = [
@@ -96,15 +97,11 @@ class CartesianMoveitServer(Node):
 
         return result.solution.joint_state, ''
 
-    def build_goal(self, pose: PoseStamped, v_scale: float):
-        joint_state, err = self.compute_ik(pose)
-        if joint_state is None:
-            return None, err
-
+    def build_joint_goal(self, joint_state, v_scale, pipeline_id, planner_id):
         goal = MoveGroup.Goal()
         goal.request.group_name = self.group_name
-        goal.request.pipeline_id = 'chomp'
-        goal.request.planner_id = 'CHOMP'
+        goal.request.pipeline_id = pipeline_id
+        goal.request.planner_id = planner_id
         goal.request.num_planning_attempts = 3
         goal.request.allowed_planning_time = 10.0
         goal.request.max_velocity_scaling_factor = v_scale
@@ -123,7 +120,48 @@ class CartesianMoveitServer(Node):
 
         goal.request.goal_constraints.append(constraints)
         goal.planning_options.plan_only = False
-        return goal, ''
+        return goal
+
+    def send_move_goal(self, move_goal):
+        """Send a MoveGroup goal and wait for the result.
+        Returns (success: bool, error_code: int)."""
+        self._move_client.wait_for_server()
+        send_future = self._move_client.send_goal_async(move_goal)
+        rclpy.spin_until_future_complete(self, send_future)
+        move_goal_handle = send_future.result()
+
+        if not move_goal_handle.accepted:
+            return False, -1  # rejected before planning
+
+        result_future = move_goal_handle.get_result_async()
+        rclpy.spin_until_future_complete(self, result_future)
+        move_result = result_future.result().result
+
+        return (move_result.error_code.val == 1), move_result.error_code.val
+
+    def move_to_pose(self, pose: PoseStamped, v_scale: float):
+        """Compute IK once, then try CHOMP first; fall back to OMPL RRTConnect
+        if CHOMP's plan is invalid/fails. Returns (success, error_message)."""
+        joint_state, err = self.compute_ik(pose)
+        if joint_state is None:
+            return False, err
+
+        # Attempt 1: CHOMP (smooth, consistent, but weaker obstacle avoidance)
+        chomp_goal = self.build_joint_goal(joint_state, v_scale, 'chomp', 'CHOMP')
+        success, code = self.send_move_goal(chomp_goal)
+        if success:
+            return True, ''
+
+        self.get_logger().warn(
+            f'CHOMP failed (error code {code}), falling back to OMPL RRTConnect')
+
+        # Attempt 2: OMPL RRTConnect (reliable global obstacle avoidance)
+        ompl_goal = self.build_joint_goal(joint_state, v_scale, 'ompl', 'RRTConnectkConfigDefault')
+        success, code = self.send_move_goal(ompl_goal)
+        if success:
+            return True, ''
+
+        return False, f'Both CHOMP and OMPL RRTConnect failed, last error code {code}'
 
     def execute_callback(self, goal_handle):
         htm = goal_handle.request.htm
@@ -140,35 +178,13 @@ class CartesianMoveitServer(Node):
 
         target = self.htm_to_pose_stamped(htm)
 
-        move_goal, err = self.build_goal(target, v_scale if v_scale > 0.0 else 0.3)
-        if move_goal is None:
-            self.get_logger().error(f'IK failed: {err}')
+        success, err = self.move_to_pose(target, v_scale if v_scale > 0.0 else 0.3)
+
+        if not success:
+            self.get_logger().error(f'Motion failed: {err}')
             goal_handle.abort()
             result.success = False
             result.error = err
-            return result
-
-        self._move_client.wait_for_server()
-        send_future = self._move_client.send_goal_async(move_goal)
-        rclpy.spin_until_future_complete(self, send_future)
-        move_goal_handle = send_future.result()
-
-        if not move_goal_handle.accepted:
-            self.get_logger().error('move_group rejected goal')
-            goal_handle.abort()
-            result.success = False
-            result.error = 'move_group rejected goal'
-            return result
-
-        result_future = move_goal_handle.get_result_async()
-        rclpy.spin_until_future_complete(self, result_future)
-        move_result = result_future.result().result
-
-        if move_result.error_code.val != 1:
-            self.get_logger().error(f'Planning/execution failed, error code {move_result.error_code.val}')
-            goal_handle.abort()
-            result.success = False
-            result.error = f'MoveIt error code {move_result.error_code.val}'
             return result
 
         feedback.progress = 1.0
