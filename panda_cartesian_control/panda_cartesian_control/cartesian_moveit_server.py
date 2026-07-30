@@ -1,15 +1,18 @@
 import math
 
+import numpy as np
 import rclpy
 from rclpy.node import Node
 from rclpy.action import ActionServer, ActionClient
 from geometry_msgs.msg import PoseStamped
+from sensor_msgs.msg import JointState
 from moveit_msgs.action import MoveGroup
 from moveit_msgs.msg import Constraints, JointConstraint
 from moveit_msgs.msg import OrientationConstraint
-from moveit_msgs.srv import GetPositionIK
+from ament_index_python.packages import get_package_share_directory
 
 from panda_cartesian_control_msgs.action import HTMMotion
+from panda_cartesian_control.pinocchio_ik import solver
 
 
 def matrix_to_quaternion(m):
@@ -54,16 +57,31 @@ class CartesianMoveitServer(Node):
         self.ee_link = 'panda_link8'
         self.group_name = 'panda_arm'
 
+        urdf_path = get_package_share_directory('panda_cartesian_control') + '/urdf/panda_arm.urdf'
+        solver.load_model(urdf_path)
+        self.joint_names = solver.get_joint_names()
+        self.current_q = solver.Q_PREFERRED.copy()
+
         self._move_client = ActionClient(self, MoveGroup, 'move_action')
-        self._ik_client = self.create_client(GetPositionIK, '/compute_ik')
+
+        self._joint_state_sub = self.create_subscription(
+            JointState, '/joint_states', self.joint_state_callback, 10)
 
         self._server = ActionServer(
             self, HTMMotion, 'htm_motion', self.execute_callback)
 
         self.get_logger().info(
-            'HTM MoveIt action server ready (KDL IK + CHOMP, fallback to OMPL RRTConnect).')
+            'HTM MoveIt action server ready (Pinocchio IK + CHOMP, fallback to OMPL RRTConnect).')
 
-    def htm_to_pose_stamped(self, htm):
+    def joint_state_callback(self, msg):
+        pos_map = dict(zip(msg.name, msg.position))
+        q = list(self.current_q)
+        for i, name in enumerate(self.joint_names):
+            if name in pos_map:
+                q[i] = pos_map[name]
+        self.current_q = np.array(q)
+
+    def htm_to_pose_and_rot(self, htm):
         rot = [
             [htm[0], htm[1], htm[2]],
             [htm[4], htm[5], htm[6]],
@@ -80,23 +98,19 @@ class CartesianMoveitServer(Node):
         pose.pose.orientation.y = y
         pose.pose.orientation.z = z
         pose.pose.orientation.w = w
-        return pose
+        return pose, np.array(rot)
 
-    def compute_ik(self, pose_stamped):
-        req = GetPositionIK.Request()
-        req.ik_request.group_name = self.group_name
-        req.ik_request.pose_stamped = pose_stamped
-        req.ik_request.timeout.sec = 1
+    def compute_ik_pinocchio(self, target_pos, target_rot):
+        q_sol, ok, iters = solver.solve_ik(
+            np.array(target_pos), np.array(target_rot), q_init=self.current_q)
 
-        self._ik_client.wait_for_service()
-        future = self._ik_client.call_async(req)
-        rclpy.spin_until_future_complete(self, future)
-        result = future.result()
+        if not ok:
+            return None, f'Pinocchio IK did not converge after {iters} iterations'
 
-        if result.error_code.val != 1:
-            return None, f'IK failed, error code {result.error_code.val}'
-
-        return result.solution.joint_state, ''
+        joint_state = JointState()
+        joint_state.name = self.joint_names
+        joint_state.position = q_sol.tolist()
+        return joint_state, ''
 
     def build_joint_goal(self, joint_state, target_pose, v_scale, pipeline_id, planner_id, use_orientation_constraint=False):
         goal = MoveGroup.Goal()
@@ -157,26 +171,29 @@ class CartesianMoveitServer(Node):
 
         return (move_result.error_code.val == 1), move_result.error_code.val
 
-    def move_to_pose(self, pose: PoseStamped, v_scale: float):
-        """Compute IK once, then try CHOMP first; fall back to OMPL RRTConnect
-        if CHOMP's plan is invalid/fails. Returns (success, error_message)."""
-        joint_state, err = self.compute_ik(pose)
+    def move_to_pose(self, pose: PoseStamped, rot, v_scale: float):
+        """Solve IK via Pinocchio, then try CHOMP first; fall back to OMPL
+        RRTConnect if CHOMP's plan is invalid/fails. Returns (success, error_message)."""
+        target_pos = [pose.pose.position.x, pose.pose.position.y, pose.pose.position.z]
+        joint_state, err = self.compute_ik_pinocchio(target_pos, rot)
         if joint_state is None:
             return False, err
 
         # Attempt 1: CHOMP (smooth, consistent, but weaker obstacle avoidance)
-        chomp_goal = self.build_joint_goal(joint_state,pose,v_scale,'chomp','CHOMP',use_orientation_constraint=True)
+        chomp_goal = self.build_joint_goal(joint_state, pose, v_scale, 'chomp', 'CHOMP', use_orientation_constraint=True)
         success, code = self.send_move_goal(chomp_goal)
         if success:
+            self.current_q = np.array(joint_state.position)
             return True, ''
 
         self.get_logger().warn(
             f'CHOMP failed (error code {code}), falling back to OMPL RRTConnect')
 
         # Attempt 2: OMPL RRTConnect (reliable global obstacle avoidance)
-        ompl_goal = self.build_joint_goal(joint_state,None,v_scale,'ompl','RRTConnectkConfigDefault',use_orientation_constraint=False)
+        ompl_goal = self.build_joint_goal(joint_state, None, v_scale, 'ompl', 'RRTConnectkConfigDefault', use_orientation_constraint=False)
         success, code = self.send_move_goal(ompl_goal)
         if success:
+            self.current_q = np.array(joint_state.position)
             return True, ''
 
         return False, f'Both CHOMP and OMPL RRTConnect failed, last error code {code}'
@@ -194,9 +211,9 @@ class CartesianMoveitServer(Node):
             result.error = 'HTM must have 16 values'
             return result
 
-        target = self.htm_to_pose_stamped(htm)
+        target_pose, target_rot = self.htm_to_pose_and_rot(htm)
 
-        success, err = self.move_to_pose(target, v_scale if v_scale > 0.0 else 0.3)
+        success, err = self.move_to_pose(target_pose, target_rot, v_scale if v_scale > 0.0 else 0.3)
 
         if not success:
             self.get_logger().error(f'Motion failed: {err}')

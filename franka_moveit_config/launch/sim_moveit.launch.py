@@ -183,6 +183,8 @@ def generate_launch_description():
             planning_scene_monitor_parameters,
             {'planning_pipelines': ['ompl', 'chomp']},
             {'default_planning_pipeline': 'ompl'},
+            {'use_sim_time': True},
+
         ],
     )
 
@@ -201,6 +203,8 @@ def generate_launch_description():
             robot_description_semantic,
             ompl_planning_pipeline_config,
             kinematics_yaml,
+            {'use_sim_time': True},
+
         ],
     )
 
@@ -208,9 +212,11 @@ def generate_launch_description():
     robot_state_publisher = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
-        # name='robot_state_publisher',
         output='both',
-        parameters=[robot_description],
+        parameters=[
+            robot_description,
+            {'use_sim_time': True},
+        ],
     )
 
     ros2_controllers_path = os.path.join(
