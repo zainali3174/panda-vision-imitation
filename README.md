@@ -42,7 +42,7 @@ wsl --install -d Ubuntu
 
 This installs Virtual Machine Platform, Windows Subsystem for Linux, and Ubuntu. Reboot your device. The Ubuntu installation may resume on its own after reboot — let it finish, then it asks for a username and password (this is a **new** Linux login, separate from Windows). It may then ask about metrics collection — either answer works.
 
-Now you're in the Ubuntu terminal — leave it open, and open a **separate** `cmd` window:
+Now you're in the Ubuntu terminal — leave it open, and open a **separate** `cmd` window and run:
 
 ```bash
 wsl -l -v
@@ -55,7 +55,7 @@ NAME      STATE           VERSION
 * Ubuntu    Running         2
 ```
 
-Still in that same `cmd` window (**not** the Ubuntu one):
+Still in that same `cmd` window (**not** the Ubuntu one), run:
 
 ```bash
 notepad "%USERPROFILE%\.wslconfig"
@@ -111,7 +111,7 @@ cd multipanda_ros2
 Checkout the branch you actually want to work on — a fresh clone defaults to the repo's default branch (`humble`), **not** `fyp-dev` or `uet_bridge`:
 
 ```bash
-git checkout fyp-dev        # or: git checkout uet_bridge
+git checkout uet_bridge
 ```
 
 Set up and enter the container:
