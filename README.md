@@ -166,7 +166,7 @@ Make sure VcXsrv is already running before `./run`.
 1. Clone the repository recursively to include **mujoco_ros_pkgs**:
 
 ```bash
-git clone --recursive https://github.com/tenfoldpaper/multipanda_ros2.git
+git clone --recursive https://github.com/zainali3174/multipanda_ros2.git
 ```
 
 2. Change into the cloned repository:
@@ -234,7 +234,7 @@ docker exec -it --user developer multipanda-container bash
    ~/Libraries/libfranka/bin/communication_test <robot-ip>
    ```
 
-## FYP Additions (This Fork)
+## Additions (This Fork)
 
 This fork extends the base `multipanda_ros2` project with additional packages developed as part of a Final Year Project:
 
@@ -247,7 +247,7 @@ This fork extends the base `multipanda_ros2` project with additional packages de
 docker exec -it --user developer multipanda-container bash
 ```
 
-Run all commands below inside the container unless noted otherwise.
+Run the commands below inside the container unless noted otherwise.
 
 ### Running IK
 
@@ -425,9 +425,6 @@ PYEOF
 
 
 
-## Credits
-
-The original version is forked from mcbed's port of franka_ros2 for [humble][mcbed-humble].
 
 ## License
 
