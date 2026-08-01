@@ -135,6 +135,15 @@ You're now **inside** the container at a `developer@docker-desktop` prompt. Stil
 ```bash
 colcon build
 ```
+If you get stuck in colcon built while setting up mulit_mode_controller. Close the terminal.Try the following.
+```bash
+colcon build --packages-select multi_mode_controller
+colcon build --packages-skip multi_mode_controller
+```
+If Ubuntu terminal doesnt open. Run the following in the cmd and then try again:
+```bash
+wsl --shutdown
+```
 
 Make ROS see your built packages in every future shell:
 
