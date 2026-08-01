@@ -164,7 +164,7 @@ source ~/.bashrc
 
 Make sure VcXsrv is already running before `./run`.
 
-## Installation — One-Click Installer
+## Installation — Ubuntu 22.04
 
 1. Clone the repository recursively to include **mujoco_ros_pkgs**:
 
@@ -248,14 +248,11 @@ docker exec -it --user developer multipanda-container bash
    ~/Libraries/libfranka/bin/communication_test <robot-ip>
    ```
 
-## Additions (This Fork)
+## Usage Commands
 
 This fork extends the base `multipanda_ros2` project with additional packages developed as part of a Final Year Project:
 
-- **`panda_cartesian_control`** — provides Cartesian (XYZ/HTM-based) motion control and pick-and-place orchestration for the Franka arm on top of MoveIt, exposing custom ROS2 actions (`htm_motion`, `pick_place`) instead of requiring manual RViz interaction.
-- **`panda_cartesian_control_msgs`** — custom action definitions (`HTMMotion`, `PickPlace`) used by the above.
-
-### Entering the Container
+### Opening a terminal inside container 
 
 ```bash
 docker exec -it --user developer multipanda-container bash
@@ -263,22 +260,7 @@ docker exec -it --user developer multipanda-container bash
 
 Run the commands below inside the container unless noted otherwise.
 
-### Running IK
-
-```bash
-# Simulation
-ros2 launch franka_moveit_config sim_moveit.launch.py
-
-# Hardware (fake)
-ros2 launch franka_moveit_config moveit.launch.py robot_ip:=dummy use_fake_hardware:=true
-
-# Hardware (real)
-ros2 launch franka_moveit_config moveit.launch.py robot_ip:=172.16.0.2
-```
-
-### Cartesian IK
-
-**Simulation**
+## Start Mujuco, RViz and related nodes
 
 ```bash
 # Terminal 1
@@ -288,20 +270,7 @@ ros2 launch franka_moveit_config sim_moveit.launch.py
 ros2 run panda_cartesian_control cartesian_moveit_server
 
 # Terminal 3
-ros2 action send_goal /cartesian_via_motion panda_motion_generator_msgs/action/CartesianViaMotion "{via_poses: [{position: {x: 0.4, y: 0.0, z: 0.5}, orientation: {x: 1.0, y: 0.0, z: 0.0, w: 0.0}}], v_scale: 0.2}"
-```
-
-**Hardware**
-
-```bash
-# Terminal 1
-ros2 launch franka_moveit_config moveit.launch.py robot_ip:=172.16.0.2
-
-# Terminal 2
-ros2 run panda_cartesian_control cartesian_moveit_server
-
-# Terminal 3
-ros2 action send_goal /cartesian_via_motion panda_motion_generator_msgs/action/CartesianViaMotion "{via_poses: [{position: {x: 0.4, y: 0.0, z: 0.5}, orientation: {x: 1.0, y: 0.0, z: 0.0, w: 0.0}}], v_scale: 0.2}"
+ros2 run panda_cartesian_control pick_place_server --ros-args -p use_sim:=true
 ```
 
 **Checking current end-effector HTM**
@@ -313,9 +282,6 @@ ros2 run tf2_ros tf2_echo panda_link0 panda_link8
 ### HTM Motion
 
 ```bash
-ros2 action send_goal /htm_motion panda_cartesian_control_msgs/action/HTMMotion "{htm: [1,0,0,0.4, 0,-1,0,-0.2, 0,0,-1,0.4, 0,0,0,1], v_scale: 0.2}"
-
-# Corrected orientation
 ros2 action send_goal /htm_motion panda_cartesian_control_msgs/action/HTMMotion "{htm: [0.707,-0.707,0,0.4, -0.707,-0.707,0,-0.2, 0,0,-1,0.4, 0,0,0,1], v_scale: 0.2}"
 ```
 
@@ -324,14 +290,7 @@ ros2 action send_goal /htm_motion panda_cartesian_control_msgs/action/HTMMotion 
 ```bash
 # Simulation
 ros2 action send_goal /panda_gripper_sim_node/move franka_msgs/action/Move "{width: 0.08, speed: 0.1}"
-
-# Hardware
-# Terminal 1
-ros2 launch franka_moveit_config moveit.launch.py robot_ip:=172.16.0.2 load_gripper:=true
-
-# Terminal 2
-ros2 action send_goal /panda_gripper/move franka_msgs/action/Move "{width: 0.08, speed: 0.1}"
-ros2 action send_goal /panda_gripper/grasp franka_msgs/action/Grasp "{width: 0.05, epsilon: {inner: 0.01, outer: 0.01}, speed: 0.05, force: 20.0}"
+ros2 action send_goal /panda_gripper_sim_node/grasp franka_msgs/action/Grasp "{width: 0.05, epsilon: {inner: 0.01, outer: 0.01}, speed: 0.05, force: 20.0}"
 ```
 
 ### Pick and Place
@@ -339,33 +298,7 @@ ros2 action send_goal /panda_gripper/grasp franka_msgs/action/Grasp "{width: 0.0
 **Simulation**
 
 ```bash
-# Terminal 1
-ros2 launch franka_moveit_config sim_moveit.launch.py
-
-# Terminal 2
-ros2 run panda_cartesian_control cartesian_moveit_server
-
-# Terminal 3
-ros2 run panda_cartesian_control pick_place_server --ros-args -p use_sim:=true
-
-# Terminal 4
 ros2 action send_goal /pick_place panda_cartesian_control_msgs/action/PickPlace "{pick_xyz: [0.28, -0.18, 0.18], place_xyz: [0.28, 0.18, 0.18], z_offset: 0.1, grasp_width: 0.05, grasp_force: 20.0}" --feedback
-```
-
-**Hardware**
-
-```bash
-# Terminal 1
-ros2 launch franka_moveit_config moveit.launch.py robot_ip:=172.16.0.2
-
-# Terminal 2
-ros2 run panda_cartesian_control cartesian_moveit_server
-
-# Terminal 3
-ros2 run panda_cartesian_control pick_place_server --ros-args -p use_sim:=false
-
-# Terminal 4
-ros2 action send_goal /pick_place panda_cartesian_control_msgs/action/PickPlace "{pick_xyz: [0.4, -0.2, 0.3], place_xyz: [0.4, 0.2, 0.3], z_offset: 0.1, grasp_width: 0.05, grasp_force: 20.0}" --feedback
 ```
 ### Adding and Removing obstacle in RViz
 
@@ -377,28 +310,34 @@ python3 << 'PYEOF'
 import rclpy
 from rclpy.node import Node
 from moveit_msgs.msg import PlanningScene, CollisionObject
-import time
-
+from shape_msgs.msg import SolidPrimitive
+from geometry_msgs.msg import Pose
 rclpy.init()
-node = Node('remove_obstacle')
+node = Node('add_obstacle')
 pub = node.create_publisher(PlanningScene, '/planning_scene', 10)
-
-time.sleep(1.0)
-
+import time
+time.sleep(1.0)  # let publisher connect
 obj = CollisionObject()
 obj.header.frame_id = 'panda_link0'
 obj.id = 'human_obstacle'
-obj.operation = CollisionObject.REMOVE
-
+obj.operation = CollisionObject.ADD
+primitive = SolidPrimitive()
+primitive.type = SolidPrimitive.BOX
+primitive.dimensions = [0.06, 0.34, 0.2]
+pose = Pose()
+pose.position.x = 0.0
+pose.position.y = -0.3
+pose.position.z = 0.15
+pose.orientation.w = 1.0
+obj.primitives.append(primitive)
+obj.primitive_poses.append(pose)
 scene = PlanningScene()
 scene.world.collision_objects.append(obj)
 scene.is_diff = True
-
 for _ in range(3):
     pub.publish(scene)
     time.sleep(0.5)
-
-print("Removed collision object")
+print("Published collision object")
 node.destroy_node()
 rclpy.shutdown()
 PYEOF
