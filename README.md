@@ -349,7 +349,7 @@ ros2 run panda_cartesian_control cartesian_moveit_server
 ros2 run panda_cartesian_control pick_place_server --ros-args -p use_sim:=true
 
 # Terminal 4
-ros2 action send_goal /pick_place panda_cartesian_control_msgs/action/PickPlace "{pick_xyz: [0.4, -0.2, 0.3], place_xyz: [0.4, 0.2, 0.3], z_offset: 0.1, grasp_width: 0.05, grasp_force: 20.0}" --feedback
+ros2 action send_goal /pick_place panda_cartesian_control_msgs/action/PickPlace "{pick_xyz: [0.28, -0.18, 0.18], place_xyz: [0.28, 0.18, 0.18], z_offset: 0.1, grasp_width: 0.05, grasp_force: 20.0}" --feedback
 ```
 
 **Hardware**
