@@ -6,11 +6,14 @@ This project implements most features from the original `franka_ros` repository 
 
 **This fork adds:**
 
+
+
+- **Custom IK and motion planning pipeline** MoveIt's default KDL inverse kinematics solver is replaced with a `Pinocchio-based IK solver`, and the default RRTConnect motion planner is replaced with `CHOMP` (optimization-based planning) with RRTConnect as an automatic fallback if CHOMP fails to find a valid plan
 - **Cartesian motion control** via a dedicated `panda_cartesian_control` package, including an HTM (homogeneous transformation matrix)-based motion action for direct Cartesian pose commands
 - **Pick-and-place automation** through a `pick_place_server` action, with a predefined set of cube coordinates for a demo grasping scene
 - **RViz collision scene scripting** simple Python snippets to add/remove obstacles from the MoveIt planning scene at runtime
 - **Windows support** a full WSL2 + Docker Desktop installation path for Windows 11 (with an unverified Windows 10 variant), so the project no longer requires native Ubuntu
-- **Streamlined Docker install on Ubuntu** the manual libfranka/MuJoCo/Eigen build-from-source route is replaced with a one-shot `./tools/setup_env` + `./run` container setup (plus `pip install pin` for Pinocchio)
+
 
 Everything from the upstream `multipanda_ros2` project — real and simulated robot control interfaces, controller swapping, error recovery, FrankaState broadcasting, etc.  is retained as-is; see Working Features below.
 
