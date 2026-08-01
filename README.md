@@ -291,13 +291,16 @@ ros2 action send_goal /panda_gripper_sim_node/grasp franka_msgs/action/Grasp "{w
 ```bash
 ros2 action send_goal /pick_place panda_cartesian_control_msgs/action/PickPlace "{pick_xyz: [0.28, -0.18, 0.18], place_xyz: [0.28, 0.18, 0.18], z_offset: 0.1, grasp_width: 0.05, grasp_force: 20.0}" --feedback
 ```
-### Cubes coordinates for pick and place
-| cube_near_left | red | [0.28, 0.18, 0.18] |
-| cube_near_right | green | [0.52, 0.18, 0.18] |
-| cube_far_left | yellow | [0.28, 0.42, 0.18] |
-| cube_far_right_base | blue | [0.52, 0.42, 0.18] |
-| cube_far_right_mid | orange | [0.52, 0.42, 0.23] |
-| cube_far_right_top | purple | [0.52, 0.42, 0.28] |
+## Cubes Coordinates for Pick and Place
+
+| Cube Name             | Color  | Coordinates (x, y, z) |
+|-----------------------|--------|------------------------|
+| cube_near_left        | Red    | `[0.28, 0.18, 0.18]`   |
+| cube_near_right       | Green  | `[0.52, 0.18, 0.18]`   |
+| cube_far_left         | Yellow | `[0.28, 0.42, 0.18]`   |
+| cube_far_right_base   | Blue   | `[0.52, 0.42, 0.18]`   |
+| cube_far_right_mid    | Orange | `[0.52, 0.42, 0.23]`   |
+| cube_far_right_top    | Purple | `[0.52, 0.42, 0.28]`   |
 
 
 ### Adding and Removing obstacle in RViz
