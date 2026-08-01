@@ -81,7 +81,8 @@ wsl --shutdown
 
 Reopen the Ubuntu app from the Start menu.
 
-Install **Docker Desktop for Windows** ([docker.com](https://www.docker.com)) , make sure "Use WSL 2 instead of Hyper-V" is checked during install (this is the default, so just install as it is). After install, go to **Docker Desktop → Settings → Resources → WSL Integration**:
+
+Install **Docker Desktop for Windows** ([Download from here](https://desktop.docker.com/win/main/amd64/Docker%20Desktop%20Installer.exe?utm_source=docker&utm_medium=webreferral&utm_campaign=docs-driven-download-win-amd64&_gl=1*1pk98sm*_ga*NTY5NjIyMDMxLjE3ODU1NzI2OTk.*_ga_XJWPQMJYHQ*czE3ODU1NzI2OTgkbzEkZzAkdDE3ODU1NzI2OTgkajYwJGwwJGgw)), Run the .exe file and install. Make sure "Use WSL 2 instead of Hyper-V" is checked during install (this is the default, so just install as it is). After install, go to **Docker Desktop App→ Settings → Resources → WSL Integration**:
 
 - "Enable integration with my default WSL distro" — **ON**
 - Your Ubuntu distro toggled **ON** individually
