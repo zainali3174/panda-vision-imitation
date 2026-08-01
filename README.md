@@ -40,7 +40,12 @@ Open `cmd` as administrator and paste:
 wsl --install -d Ubuntu
 ```
 
-Now Reboot your device. The Ubuntu installation may resume on its own after reboot — let it finish, then it asks for a username and password (this is a **new** Linux login, separate from Windows). It may then ask about metrics collection — either answer works. If nothing opens on its own open Ubuntu app from search bar.
+### Two cases
+
+* **If it asks for a username and password:** Enter any username and password of your choice. This creates a **new Linux user account**, separate from your Windows account. It may also ask whether to enable metrics collection; either option is fine. Once the setup is complete, **reboot your device**.
+
+* **If it does not ask for a username or password:** Wait for the command to finish, then **reboot your device**. After restarting, the Ubuntu setup may resume automatically. Let it finish, then create a **new Linux username and password** when prompted. If nothing opens automatically after reboot, launch **Ubuntu** app from the Start menu to continue the setup.
+
 
 Now you're in the Ubuntu terminal — leave it open, and open a **separate** `cmd` window and run:
 
@@ -76,7 +81,7 @@ wsl --shutdown
 
 Reopen the Ubuntu app from the Start menu.
 
-Install **Docker Desktop for Windows** ([docker.com](https://www.docker.com)) — keep "Use WSL 2 instead of Hyper-V" checked during install (default). After install, go to **Docker Desktop → Settings → Resources → WSL Integration**:
+Install **Docker Desktop for Windows** ([docker.com](https://www.docker.com)) , make sure "Use WSL 2 instead of Hyper-V" is checked during install (this is the default, so just install as it is). After install, go to **Docker Desktop → Settings → Resources → WSL Integration**:
 
 - "Enable integration with my default WSL distro" — **ON**
 - Your Ubuntu distro toggled **ON** individually
@@ -140,8 +145,6 @@ To open a **second** terminal into the same running container later (open a new 
 ```bash
 docker exec -it --user developer multipanda-container /bin/bash -c "source /home/developer/.bashrc && bash"
 ```
-
-
 
 
 ## Installation — Windows 10
@@ -375,8 +378,6 @@ node.destroy_node()
 rclpy.shutdown()
 PYEOF
 ```
-
-
 
 
 ## License
