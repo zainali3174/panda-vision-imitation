@@ -120,8 +120,10 @@ Set up and enter the container:
 ./tools/setup_env
 sudo apt update
 sudo apt install -y x11-xserver-utils
-./run
+./run/
 ```
+If asked for a password, enter the password you created for your Linux user account.
+
 Install pinnochio:
 
 ```bash
