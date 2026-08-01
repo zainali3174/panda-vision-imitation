@@ -34,13 +34,13 @@ More thorough information is available in the documentation.
 
 ## Installation — Windows 11
 
-Open `cmd` as administrator:
+Open `cmd` as administrator and paste:
 
 ```bash
 wsl --install -d Ubuntu
 ```
 
-This installs Virtual Machine Platform, Windows Subsystem for Linux, and Ubuntu. Reboot your device. The Ubuntu installation may resume on its own after reboot — let it finish, then it asks for a username and password (this is a **new** Linux login, separate from Windows). It may then ask about metrics collection — either answer works.
+Now Reboot your device. The Ubuntu installation may resume on its own after reboot — let it finish, then it asks for a username and password (this is a **new** Linux login, separate from Windows). It may then ask about metrics collection — either answer works. If nothing opens on its own open Ubuntu app from search bar.
 
 Now you're in the Ubuntu terminal — leave it open, and open a **separate** `cmd` window and run:
 
