@@ -141,6 +141,13 @@ To open a **second** terminal into the same running container later (open a new 
 docker exec -it --user developer multipanda-container /bin/bash -c "source /home/developer/.bashrc && bash"
 ```
 
+Install pinnochio:
+
+```bash
+pip install pin
+```
+
+
 ## Installation — Windows 10
 
 Everything above is identical, **except**:
