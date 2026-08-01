@@ -108,12 +108,6 @@ git clone --recursive https://github.com/zainali3174/multipanda_ros2.git
 cd multipanda_ros2
 ```
 
-Checkout the branch you actually want to work on — a fresh clone defaults to the repo's default branch (`humble`), **not** `fyp-dev` or `uet_bridge`:
-
-```bash
-git checkout uet_bridge
-```
-
 Set up and enter the container:
 
 ```bash
@@ -121,6 +115,11 @@ Set up and enter the container:
 sudo apt update
 sudo apt install -y x11-xserver-utils
 ./run
+```
+Install pinnochio:
+
+```bash
+pip install pin
 ```
 
 You're now **inside** the container at a `developer@docker-desktop` prompt. Still inside the container, build the workspace:
@@ -132,6 +131,7 @@ colcon build
 Make ROS see your built packages in every future shell:
 
 ```bash
+source ~/multipanda_ws/install/setup.bash 
 echo "source ~/multipanda_ws/install/setup.bash" >> ~/.bashrc
 ```
 
@@ -141,11 +141,7 @@ To open a **second** terminal into the same running container later (open a new 
 docker exec -it --user developer multipanda-container /bin/bash -c "source /home/developer/.bashrc && bash"
 ```
 
-Install pinnochio:
 
-```bash
-pip install pin
-```
 
 
 ## Installation — Windows 10
@@ -193,6 +189,11 @@ cd multipanda_ros2
 ```bash
 ./run
 ```
+Install pinnochio:
+
+```bash
+pip install pin
+```
 
 The default config allows for communication in the network, GPU access, display forwarding for GUI applications, hardware devices, etc. By default the script opens a bash shell inside the container as a `developer` user (password can be modified in the Dockerfile) in the ROS2 workspace under `~/multipanda_ws`.
 
@@ -200,6 +201,12 @@ The default config allows for communication in the network, GPU access, display 
 
 ```bash
 colcon build
+```
+
+Make ROS see your built packages in every future shell:
+
+```bash
+echo "source ~/multipanda_ws/install/setup.bash" >> ~/.bashrc
 ```
 
 In case there are problems with missing packages, try running the following commands inside the container before `colcon build`:
