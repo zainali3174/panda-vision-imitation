@@ -47,7 +47,7 @@ wsl --install -d Ubuntu
 * **If it does not ask for a username or password:** Wait for the command to finish, then **reboot your device**. After restarting, the Ubuntu setup may resume automatically. Let it finish, then create a **new Linux username and password** when prompted. If nothing opens automatically after reboot, launch **Ubuntu** app from the Start menu to continue the setup.
 
 
-Now you're in the Ubuntu terminal — leave it open, and open a **separate** `cmd` window and run:
+Open a **separate** `cmd` window aas administrator and run:
 
 ```bash
 wsl -l -v
@@ -102,7 +102,7 @@ If you see "permission denied" — close the Ubuntu window entirely, reopen, and
 nvidia-smi
 ```
 
-If this shows your GPU, Docker will auto-detect it later — nothing else needed.
+If this shows your GPU, Docker will auto-detect it later, nothing else needed.
 
 Clone the repository:
 
@@ -150,11 +150,11 @@ docker exec -it --user developer multipanda-container /bin/bash -c "source /home
 ```
 
 
-## Installation — Windows 10
+## Installation — Windows 10 (Not Verified)
 
 Everything above is identical, **except**:
 
-- Mirrored networking (the `.wslconfig` step) may not be supported on older Windows 10 builds. Check with `wsl --version` — if `networkingMode` isn't recognized after `wsl --shutdown`, skip that step and flag it so the `run` script's `--network` flag can be adjusted instead.
+- Mirrored networking (the `.wslconfig` step) may not be supported on older Windows 10 builds. Check with `wsl --version` , if `networkingMode` isn't recognized after `wsl --shutdown`, skip that step and flag it so the `run` script's `--network` flag can be adjusted instead.
 - Install **VcXsrv** (search "VcXsrv" on SourceForge), launch it via XLaunch with "Disable access control" checked, and leave it running in the background.
 - Add this line to `~/.bashrc` **inside WSL** (not the container) before running `./run`:
 
@@ -212,6 +212,7 @@ colcon build
 Make ROS see your built packages in every future shell:
 
 ```bash
+source ~/multipanda_ws/install/setup.bash 
 echo "source ~/multipanda_ws/install/setup.bash" >> ~/.bashrc
 ```
 
@@ -237,22 +238,6 @@ To open the docker container in an additional terminal, use the `docker exec` co
 ```bash
 docker exec -it --user developer multipanda-container bash
 ```
-
-7. **(Optional)** Check that the connection to the robot, RT kernel, and screen are all working fine (make sure the FCI feature is activated).
-
-   Check that docker is properly linked to your screen by running either:
-
-   ```bash
-   ros2 run rviz2 rviz2
-   # or
-   ~/Libraries/mujoco/bin/simulate
-   ```
-
-   For RT kernel and robot connection, run:
-
-   ```bash
-   ~/Libraries/libfranka/bin/communication_test <robot-ip>
-   ```
 
 ## Usage Commands
 
