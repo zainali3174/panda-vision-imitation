@@ -2,9 +2,17 @@
 
 <img src="docs/images/single_sim.png" alt="" height="250">
 
-This project implements most features from the original `franka_ros` repository in ROS2 Humble, specifically for the Franka Emika Robot (Panda). This project significantly expands upon the original `franka_ros2` from the company, who dropped the support for the Pandas.
+This project implements most features from the original `franka_ros` repository in ROS2 Humble, specifically for the Franka Emika Robot (Panda). It significantly expands upon the original `franka_ros2` from the company, who dropped support for the Pandas, and builds further on tenfoldpaper's [multipanda_ros2](https://github.com/tenfoldpaper/multipanda_ros2)  fork, which added multi-arm MuJoCo simulation and real/sim control interfaces.
 
-**The current version relies on a [fork of the repository](https://github.com/tenfoldpaper/multipanda_ros2)**
+**This fork adds:**
+
+- **Cartesian motion control** via a dedicated `panda_cartesian_control` package, including an HTM (homogeneous transformation matrix)-based motion action for direct Cartesian pose commands
+- **Pick-and-place automation** through a `pick_place_server` action, with a predefined set of cube coordinates for a demo grasping scene
+- **RViz collision scene scripting** simple Python snippets to add/remove obstacles from the MoveIt planning scene at runtime
+- **Windows support** a full WSL2 + Docker Desktop installation path for Windows 11 (with an unverified Windows 10 variant), so the project no longer requires native Ubuntu
+- **Streamlined Docker install on Ubuntu** the manual libfranka/MuJoCo/Eigen build-from-source route is replaced with a one-shot `./tools/setup_env` + `./run` container setup (plus `pip install pin` for Pinocchio)
+
+Everything from the upstream `multipanda_ros2` project — real and simulated robot control interfaces, controller swapping, error recovery, FrankaState broadcasting, etc.  is retained as-is; see Working Features below.
 
 ## Working Features
 
