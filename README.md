@@ -1,7 +1,20 @@
 # multipanda_ros2
 
-<img src="docs/images/single_sim.png" alt="" height="250">
+<h3 align="center">Project Gallery</h3>
 
+<p align="center">
+  <img src="docs/images/single_sim.png" alt="Single Robot Simulation" height="250">
+  <img src="docs/images/pick-n-place.jpeg" alt="Pick and Place" height="250">
+</p>
+
+<p align="center">
+  <img src="docs/images/replanning-obstacle-avoidance.jpeg" alt="Replanning and Obstacle Avoidance" height="250">
+  <img src="docs/images/dual_sim.png" alt="Dual Robot Simulation" height="250">
+</p>
+
+<p align="center">
+  <img src="docs/images/garmi_sim.png" alt="GARMI Simulation" height="250">
+</p>
 This project implements most features from the original `franka_ros` repository in ROS2 Humble, specifically for the Franka Emika Robot (Panda). It significantly expands upon the original `franka_ros2` from the company, who dropped support for the Pandas, and builds further on tenfoldpaper's [multipanda_ros2](https://github.com/tenfoldpaper/multipanda_ros2)  fork, which added multi-arm MuJoCo simulation and real/sim control interfaces.
 
 **This fork adds:**
