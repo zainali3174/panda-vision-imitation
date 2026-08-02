@@ -192,6 +192,15 @@ Make sure VcXsrv is already running before `./run`.
 
 ## Installation — Ubuntu 22.04
 
+Install **Docker via apt repository** ([Download from here](https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository)). Follow the 3 steps.
+
+Allow Docker to run without `sudo`:
+
+```bash
+sudo usermod -aG docker $USER
+newgrp docker
+```
+
 1. Clone the repository recursively to include **mujoco_ros_pkgs**:
 
 ```bash
