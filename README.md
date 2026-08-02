@@ -146,7 +146,7 @@ sudo apt update
 sudo apt install -y x11-xserver-utils
 ./run
 ```
-If asked for a password, enter the password you created for your Linux user account.
+If asked for a password, its 123.
 
 Install pinnochio:
 
@@ -265,6 +265,7 @@ sudo apt update && \
 rosdep update && \
 rosdep install --from-paths src --ignore-src -y -r
 ```
+If asked for a password, its 123.
 
 6. To verify that the installation was successful, run:
 
