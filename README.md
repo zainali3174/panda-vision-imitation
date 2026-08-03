@@ -340,12 +340,12 @@ ros2 action send_goal /pick_place panda_cartesian_control_msgs/action/PickPlace 
 
 | Cube Name             | Color  | Coordinates (x, y, z) |
 |-----------------------|--------|------------------------|
-| cube_near_left        | Red    | `[0.28, 0.18, 0.18]`   |
-| cube_near_right       | Green  | `[0.52, 0.18, 0.18]`   |
-| cube_far_left         | Yellow | `[0.28, 0.42, 0.18]`   |
-| cube_far_right_base   | Blue   | `[0.52, 0.42, 0.18]`   |
-| cube_far_right_mid    | Orange | `[0.52, 0.42, 0.23]`   |
-| cube_far_right_top    | Purple | `[0.52, 0.42, 0.28]`   |
+| cube_near_left        | Red    | `[0.28, -0.18, 0.18]`   |
+| cube_near_right       | Green  | `[0.52, -0.18, 0.18]`   |
+| cube_far_left         | Yellow | `[0.28, -0.42, 0.18]`   |
+| cube_far_right_base   | Blue   | `[0.52, -0.42, 0.18]`   |
+| cube_far_right_mid    | Orange | `[0.52, -0.42, 0.23]`   |
+| cube_far_right_top    | Purple | `[0.52, -0.42, 0.28]`   |
 
 
 ### Adding and Removing obstacle in RViz
