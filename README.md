@@ -298,8 +298,11 @@ Run the commands below inside the container unless noted otherwise.
 
 ```bash
 # Terminal 1
+# Exercise 1 (run this first)
 ros2 launch franka_moveit_config sim_moveit_plain.launch.py
 
+# After completing Exercise 1, stop the above launch (Ctrl+C).
+# Exercise 2 (do NOT run together with the previous command)
 ros2 launch franka_moveit_config sim_moveit.launch.py
 
 # Terminal 2
