@@ -205,7 +205,7 @@ Make sure VcXsrv is already running before `./run`.
 
 ## Installation — Ubuntu 22.04
 
-Install **Docker via apt repository** ([Download from here](https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository)). Follow the 3 steps.
+Install **Docker via apt repository** ([Download from here](https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository)). Follow the 3 steps of "Install using the apt repository"
 
 Allow Docker to run without `sudo`:
 
@@ -239,7 +239,7 @@ cd multipanda_ros2
 ```
 Install pinnochio:
 
-```bash
+'```bash
 pip install pin
 ```
 
