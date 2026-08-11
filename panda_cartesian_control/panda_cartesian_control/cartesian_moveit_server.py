@@ -57,6 +57,11 @@ class CartesianMoveitServer(Node):
         self.ee_link = 'panda_link8'
         self.group_name = 'panda_arm'
 
+        # FIX: was hardcoded '/joint_states'; real hardware remaps this to
+        # 'franka/joint_states'. Pass via launch instead of guessing.
+        self.declare_parameter('joint_states_topic', '/joint_states')
+        joint_states_topic = self.get_parameter('joint_states_topic').get_parameter_value().string_value
+
         urdf_path = get_package_share_directory('panda_cartesian_control') + '/urdf/panda_arm.urdf'
         solver.load_model(urdf_path)
         self.joint_names = solver.get_joint_names()
@@ -65,13 +70,14 @@ class CartesianMoveitServer(Node):
         self._move_client = ActionClient(self, MoveGroup, 'move_action')
 
         self._joint_state_sub = self.create_subscription(
-            JointState, '/joint_states', self.joint_state_callback, 10)
+            JointState, joint_states_topic, self.joint_state_callback, 10)
 
         self._server = ActionServer(
             self, HTMMotion, 'htm_motion', self.execute_callback)
 
         self.get_logger().info(
-            'HTM MoveIt action server ready (Pinocchio IK + CHOMP, fallback to OMPL RRTConnect).')
+            f'HTM MoveIt action server ready (Pinocchio IK + CHOMP, fallback to OMPL RRTConnect). '
+            f'Listening for joint states on {joint_states_topic}')
 
     def joint_state_callback(self, msg):
         pos_map = dict(zip(msg.name, msg.position))
@@ -157,17 +163,26 @@ class CartesianMoveitServer(Node):
     def send_move_goal(self, move_goal):
         """Send a MoveGroup goal and wait for the result.
         Returns (success: bool, error_code: int)."""
-        self._move_client.wait_for_server()
+        # FIX: bounded wait instead of unbounded wait_for_server()
+        if not self._move_client.wait_for_server(timeout_sec=5.0):
+            self.get_logger().error('move_action server not available')
+            return False, -2  # server unavailable
+
         send_future = self._move_client.send_goal_async(move_goal)
         rclpy.spin_until_future_complete(self, send_future)
         move_goal_handle = send_future.result()
 
+        if move_goal_handle is None:
+            return False, -3  # send_goal_async returned no result
         if not move_goal_handle.accepted:
             return False, -1  # rejected before planning
 
         result_future = move_goal_handle.get_result_async()
         rclpy.spin_until_future_complete(self, result_future)
-        move_result = result_future.result().result
+        wrapped_result = result_future.result()
+        if wrapped_result is None:
+            return False, -4  # get_result_async returned no result
+        move_result = wrapped_result.result
 
         return (move_result.error_code.val == 1), move_result.error_code.val
 

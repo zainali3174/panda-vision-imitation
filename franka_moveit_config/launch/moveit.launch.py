@@ -51,16 +51,12 @@ def generate_launch_description():
     load_gripper = LaunchConfiguration(load_gripper_parameter_name)
     fake_sensor_commands = LaunchConfiguration(fake_sensor_commands_parameter_name)
 
-
     # Command-line arguments
-
     db_arg = DeclareLaunchArgument(
         'db', default_value='False', description='Database flag'
     )
 
     # planning_context
-    # franka_xacro_file = os.path.join(get_package_share_directory('franka_description'), 'robots',
-    #                                  'panda_arm.urdf.xacro')
     franka_xacro_file = os.path.join(get_package_share_directory('franka_description'), 'robots', 'real',
                                  'panda_arm.urdf.xacro')
     robot_description_config = Command(
@@ -84,9 +80,10 @@ def generate_launch_description():
         'franka_moveit_config', 'config/kinematics.yaml'
     )
 
-    # Planning Functionality
+    # Planning Functionality - OMPL pipeline
+    # FIX: keyed 'ompl' (was 'move_group') to match the multi-pipeline format used in sim
     ompl_planning_pipeline_config = {
-        'move_group': {
+        'ompl': {
             'planning_plugin': 'ompl_interface/OMPLPlanner',
             'request_adapters': 'default_planner_request_adapters/AddTimeOptimalParameterization '
                                 'default_planner_request_adapters/ResolveConstraintFrames '
@@ -100,7 +97,31 @@ def generate_launch_description():
     ompl_planning_yaml = load_yaml(
         'franka_moveit_config', 'config/ompl_planning.yaml'
     )
-    ompl_planning_pipeline_config['move_group'].update(ompl_planning_yaml)
+    if ompl_planning_yaml:
+        ompl_planning_pipeline_config['ompl'].update(ompl_planning_yaml)
+
+    # FIX: added — CHOMP pipeline was completely missing on real hardware,
+    # so goal.request.pipeline_id = 'chomp' from cartesian_moveit_server.py
+    # had nothing to resolve to. Mirrors sim_moveit.launch.py exactly.
+    chomp_planning_pipeline_config = {
+        'chomp': {
+            'planning_plugin': 'chomp_interface/CHOMPPlanner',
+            'request_adapters': 'default_planner_request_adapters/AddTimeOptimalParameterization '
+                                'default_planner_request_adapters/ResolveConstraintFrames '
+                                'default_planner_request_adapters/FixWorkspaceBounds '
+                                'default_planner_request_adapters/FixStartStateBounds '
+                                'default_planner_request_adapters/FixStartStateCollision '
+                                'default_planner_request_adapters/FixStartStatePathConstraints',
+            'start_state_max_bounds_error': 0.1,
+        }
+    }
+
+    chomp_planning_yaml = load_yaml(
+        'franka_moveit_config', 'config/chomp_planning.yaml'
+    )
+    
+    if chomp_planning_yaml:
+        chomp_planning_pipeline_config['chomp'].update(chomp_planning_yaml)
 
     # Trajectory Execution Functionality
     moveit_simple_controllers_yaml = load_yaml(
@@ -136,9 +157,12 @@ def generate_launch_description():
             robot_description_semantic,
             kinematics_yaml,
             ompl_planning_pipeline_config,
+            chomp_planning_pipeline_config,          # FIX: added
             trajectory_execution,
             moveit_controllers,
             planning_scene_monitor_parameters,
+            {'planning_pipelines': ['ompl', 'chomp']},   # FIX: added
+            {'default_planning_pipeline': 'ompl'},       # FIX: added
         ],
     )
 
@@ -156,6 +180,7 @@ def generate_launch_description():
             robot_description,
             robot_description_semantic,
             ompl_planning_pipeline_config,
+            chomp_planning_pipeline_config,          # FIX: added, for consistency with move_group
             kinematics_yaml,
         ],
     )
@@ -226,12 +251,18 @@ def generate_launch_description():
         use_fake_hardware_parameter_name,
         default_value='false',
         description='Use fake hardware')
+
+    # FIX: default_value changed from 'false' to 'true' — this was silently
+    # skipping the gripper launch entirely unless load_gripper:=true was
+    # passed explicitly, which caused pick_place_server's gripper action
+    # clients to hang forever on wait_for_server(). Pass load_gripper:=false
+    # explicitly if you actually want arm-only.
     load_gripper_arg = DeclareLaunchArgument(
             load_gripper_parameter_name,
-            default_value='false',
+            default_value='true',
             description='Use Franka Gripper as an end-effector, otherwise, the robot is loaded '
                         'without an end-effector.')
-    
+
     fake_sensor_commands_arg = DeclareLaunchArgument(
         fake_sensor_commands_parameter_name,
         default_value='false',
@@ -258,5 +289,5 @@ def generate_launch_description():
          joint_state_publisher,
          gripper_launch_file
          ]
-        + load_controllers
+        + load_controllers 
     )

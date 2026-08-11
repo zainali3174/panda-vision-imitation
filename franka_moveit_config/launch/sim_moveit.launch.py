@@ -128,9 +128,10 @@ def generate_launch_description():
     ompl_planning_yaml = load_yaml(
         'franka_moveit_config', 'config/ompl_planning.yaml'
     )
-    ompl_planning_pipeline_config['ompl'].update(ompl_planning_yaml)
+    if ompl_planning_yaml:
+        ompl_planning_pipeline_config['ompl'].update(ompl_planning_yaml)
 
-    ##### this added on 28,jul,26 (not verified)
+   
     chomp_planning_pipeline_config = {
         'chomp': {
             'planning_plugin': 'chomp_interface/CHOMPPlanner',
@@ -143,6 +144,14 @@ def generate_launch_description():
             'start_state_max_bounds_error': 0.1,
         }
     }
+
+    chomp_planning_yaml = load_yaml(
+        'franka_moveit_config', 'config/chomp_planning.yaml'
+    )
+    
+    if chomp_planning_yaml:
+        chomp_planning_pipeline_config['chomp'].update(chomp_planning_yaml)
+
     # Trajectory Execution Functionality
     moveit_simple_controllers_yaml = load_yaml(
         'franka_moveit_config', 'config/panda_controllers.yaml'
@@ -202,6 +211,7 @@ def generate_launch_description():
             robot_description,
             robot_description_semantic,
             ompl_planning_pipeline_config,
+            chomp_planning_pipeline_config,
             kinematics_yaml,
             {'use_sim_time': True},
 

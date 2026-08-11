@@ -77,3 +77,4 @@ def solve_ik(target_pos, target_rot, q_init=None, max_iters=200,
 
 def get_joint_names():
     return list(_model.names)[1:]
+ 

@@ -5,16 +5,20 @@ from rclpy.action import ActionServer, ActionClient
 from panda_cartesian_control_msgs.action import PickPlace, HTMMotion
 from franka_msgs.action import Move, Grasp
 
+ACTION_SERVER_TIMEOUT_SEC = 5.0  # FIX: was unbounded wait_for_server() everywhere
+
 
 class PickPlaceServer(Node):
     def __init__(self):
         super().__init__('pick_place_server')
 
-        self.declare_parameter('use_sim', True)
+        # FIX: no more silent default. Must be passed explicitly at launch
+        # (e.g. -p use_sim:=false), so a missing arg fails loud, not silently.
+        self.declare_parameter('use_sim', rclpy.Parameter.Type.BOOL)
         use_sim = self.get_parameter('use_sim').get_parameter_value().bool_value
-        gripper_ns = '/panda_gripper_sim_node' if use_sim else '/panda_gripper'
 
-        self.get_logger().info(f'Using gripper namespace: {gripper_ns}')
+        gripper_ns = '/panda_gripper_sim_node' if use_sim else '/panda_gripper'
+        self.get_logger().info(f'use_sim={use_sim}, gripper namespace: {gripper_ns}')
 
         self._htm_client = ActionClient(self, HTMMotion, 'htm_motion')
         self._gripper_move_client = ActionClient(self, Move, f'{gripper_ns}/move')
@@ -26,7 +30,6 @@ class PickPlaceServer(Node):
         self.get_logger().info('Pick-and-place action server ready.')
 
     def make_htm(self, xyz):
-        # Pointing-down orientation, 45deg about Z (matches known-good gripper alignment)
         return [
             0.707, -0.707, 0.0, xyz[0],
             -0.707, -0.707, 0.0, xyz[1],
@@ -39,17 +42,25 @@ class PickPlaceServer(Node):
         goal.htm = self.make_htm(xyz)
         goal.v_scale = v_scale
 
-        self._htm_client.wait_for_server()
+        # FIX: bounded wait, fails loud instead of hanging forever
+        if not self._htm_client.wait_for_server(timeout_sec=ACTION_SERVER_TIMEOUT_SEC):
+            return False, 'htm_motion action server not available'
+
         send_future = self._htm_client.send_goal_async(goal)
         rclpy.spin_until_future_complete(self, send_future)
         goal_handle = send_future.result()
 
+        if goal_handle is None:
+            return False, 'htm_motion send_goal_async returned no result'
         if not goal_handle.accepted:
             return False, 'htm_motion goal rejected'
 
         result_future = goal_handle.get_result_async()
         rclpy.spin_until_future_complete(self, result_future)
-        result = result_future.result().result
+        wrapped_result = result_future.result()
+        if wrapped_result is None:
+            return False, 'htm_motion get_result_async returned no result'
+        result = wrapped_result.result
 
         if not result.success:
             return False, f'htm_motion failed: {result.error}'
@@ -60,17 +71,24 @@ class PickPlaceServer(Node):
         goal.width = width
         goal.speed = speed
 
-        self._gripper_move_client.wait_for_server()
+        if not self._gripper_move_client.wait_for_server(timeout_sec=ACTION_SERVER_TIMEOUT_SEC):
+            return False, 'gripper move action server not available'
+
         send_future = self._gripper_move_client.send_goal_async(goal)
         rclpy.spin_until_future_complete(self, send_future)
         goal_handle = send_future.result()
 
+        if goal_handle is None:
+            return False, 'gripper move send_goal_async returned no result'
         if not goal_handle.accepted:
             return False, 'gripper move goal rejected'
 
         result_future = goal_handle.get_result_async()
         rclpy.spin_until_future_complete(self, result_future)
-        result = result_future.result().result
+        wrapped_result = result_future.result()
+        if wrapped_result is None:
+            return False, 'gripper move get_result_async returned no result'
+        result = wrapped_result.result
 
         if not result.success:
             return False, f'gripper move failed: {result.error}'
@@ -84,17 +102,24 @@ class PickPlaceServer(Node):
         goal.speed = speed
         goal.force = force
 
-        self._gripper_grasp_client.wait_for_server()
+        if not self._gripper_grasp_client.wait_for_server(timeout_sec=ACTION_SERVER_TIMEOUT_SEC):
+            return False, 'gripper grasp action server not available'
+
         send_future = self._gripper_grasp_client.send_goal_async(goal)
         rclpy.spin_until_future_complete(self, send_future)
         goal_handle = send_future.result()
 
+        if goal_handle is None:
+            return False, 'gripper grasp send_goal_async returned no result'
         if not goal_handle.accepted:
             return False, 'gripper grasp goal rejected'
 
         result_future = goal_handle.get_result_async()
         rclpy.spin_until_future_complete(self, result_future)
-        result = result_future.result().result
+        wrapped_result = result_future.result()
+        if wrapped_result is None:
+            return False, 'gripper grasp get_result_async returned no result'
+        result = wrapped_result.result
 
         if not result.success:
             return False, f'gripper grasp failed: {result.error}'
