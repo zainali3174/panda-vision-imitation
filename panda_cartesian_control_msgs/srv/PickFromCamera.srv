@@ -1,0 +1,7 @@
+int32 tag_id
+float64[3] offset
+float64[3] place_xyz
+---
+bool success
+string error
+

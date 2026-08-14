@@ -1,0 +1,6 @@
+float64[3] camera_xyz
+float64[3] offset
+---
+bool success
+string error
+float64[3] base_xyz
