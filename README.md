@@ -1,5 +1,12 @@
-# multipanda_ros2
+# 🌟 BRIDGE: ERASMUS+ CBHE Robotics Bootcamp (UET Lahore)
 
+This repository contains the software, exercises, and supporting materials developed for the **BRIDGE (ERASMUS+ Capacity Building in Higher Education)** Robotics Bootcamp held at **UET Lahore** on **August 3–5, 2026**.
+
+The repository was created as a **hands-on, reproducible training platform** for learning robotic manipulation using **ROS 2 Humble**, **MuJoCo**, and the **Franka Emika Panda** robot. It contains structured exercises, demonstrations, and practical tasks that enable participants to gain experience in simulation, robot control, motion planning, and software development.
+
+A key objective of this repository is to provide a framework that can be readily adopted by faculty members, researchers, and students from partner universities. The exercises and workflows are designed to be easily reproducible, allowing institutions to integrate modern robotics education into their own teaching and research activities.
+
+---
 <h3 align="center">Project Gallery</h3>
 
 <p align="center">
@@ -15,46 +22,69 @@
 <p align="center">
   <img src="docs/images/garmi_sim.png" alt="GARMI Simulation" height="250">
 </p>
-This project implements most features from the original `franka_ros` repository in ROS2 Humble, specifically for the Franka Emika Robot (Panda). It significantly expands upon the original `franka_ros2` from the company, who dropped support for the Pandas, and builds further on tenfoldpaper's [multipanda_ros2](https://github.com/tenfoldpaper/multipanda_ros2)  fork, which added multi-arm MuJoCo simulation and real/sim control interfaces.
 
-**This fork adds:**
+## Repository Highlights
 
+### Added in This Fork
 
+#### Motion Planning
+- **Pinocchio-based Inverse Kinematics** replacing MoveIt's default KDL IK solver for improved numerical robustness and flexibility.
+- **CHOMP** (Covariant Hamiltonian Optimization for Motion Planning) configured as the primary motion planner, with **RRTConnect** automatically used as a fallback whenever CHOMP fails to produce a valid trajectory.
 
-- **Custom IK and motion planning pipeline** MoveIt's default KDL inverse kinematics solver is replaced with a `Pinocchio-based IK solver`, and the default RRTConnect motion planner is replaced with `CHOMP` (optimization-based planning) with RRTConnect as an automatic fallback if CHOMP fails to find a valid plan
-- **Cartesian motion control** via a dedicated `panda_cartesian_control` package, including an HTM (homogeneous transformation matrix)-based motion action for direct Cartesian pose commands
-- **Pick-and-place automation** through a `pick_place_server` action, with a predefined set of cube coordinates for a demo grasping scene
-- **RViz collision scene scripting** simple Python snippets to add/remove obstacles from the MoveIt planning scene at runtime
-- **Windows support** a full WSL2 + Docker Desktop installation path for Windows 11 (with an unverified Windows 10 variant), so the project no longer requires native Ubuntu
+#### Manipulation
+- A dedicated **`panda_cartesian_control`** package providing high-level Cartesian manipulation capabilities.
+- **HTM (Homogeneous Transformation Matrix)-based Cartesian motion action** for commanding arbitrary end-effector poses directly.
+- **Pick-and-place action server** for automated grasping demonstrations using predefined cube locations in simulation.
 
+#### Planning Scene
+- Simple Python utilities for **adding and removing collision objects** in the MoveIt planning scene at runtime, enabling obstacle avoidance demonstrations without modifying the MuJoCo environment.
 
-Everything from the upstream `multipanda_ros2` project — real and simulated robot control interfaces, controller swapping, error recovery, FrankaState broadcasting, etc.  is retained as-is; see Working Features below.
+#### Platform Support
+- Complete **Windows 11 (WSL2 + Docker Desktop)** installation workflow, allowing users to run the entire project without a native Ubuntu installation.
+- Preliminary installation instructions for **Windows 10** are also provided.
 
-## Working Features
+---
 
-More thorough information is available in the documentation.
+## Core Features
 
-### Real Robot
+In addition to the enhancements above, this repository retains the complete functionality of the upstream **`multipanda_ros2`** project.
+
+### Real Robot Support
 
 - FrankaState broadcaster
-- All control interfaces (torque, position, velocity, Cartesian)
-- Example controllers for all interfaces
-- Controllers are swappable using rqt_controller_manager
-- Runtime `franka::ControlException` error recovery via `~/service_server/error_recovery`
-  - Upon recovery, the previously executed control loop will be executed again, so no reloading necessary
-- Runtime internal parameter setter services much like what is offered in the updated `franka_ros2`
+- All Franka control interfaces
+  - Torque
+  - Position
+  - Velocity
+  - Cartesian
+- Example controllers for every supported interface
+- Runtime controller switching using `rqt_controller_manager`
+- Runtime `franka::ControlException` recovery through `~/service_server/error_recovery`
+  - The interrupted control loop resumes automatically after recovery without requiring controller reloads.
+- Runtime parameter update services similar to those available in the latest `franka_ros2`
 
-### Sim Robot
+### Simulation Support
 
-- Same as the real robot, except Cartesian command interface is not available, and there is no plan to implement this for now
-- Gripper server with identical interface to the real gripper (i.e. action servers)
-- Example controllers for the real single-arm listed above, that correspond to those interfaces, work out of the box
-- FrankaState implements the basics: torque, joint position/velocity, `O_T_EE` and `O_F_ext_hat`
-- Model provides all the existing functions: `pose`, `zeroJacobian`, `bodyJacobian`, `mass`, `gravity`, `coriolis`
-  - Gravity for now just returns the corresponding `qfrc_gravcomp` force from mujoco
-  - Coriolis = `qfrc_bias - qfrc_gravcomp`
-- Camera is available as part of `mujoco_ros_pkg`'s features. You can simply add a `<camera>` object in your mujoco XML file, and the package will handle them.
-- With the forked repository's `mujoco_ros2_control_system` package, you can easily add components with additional degrees of freedom to your robot. Take a look at `garmi_packages/garmi_description/robots/*.ros2_control.xacro` for an example on how to do this.
+- Nearly identical functionality to the real robot interface
+  - (The Cartesian command interface is currently not implemented.)
+- Gripper action server with the same interface as the physical Franka gripper
+- Example controllers that work directly in simulation
+- FrankaState support for
+  - Joint positions
+  - Joint velocities
+  - Joint torques
+  - End-effector pose (`O_T_EE`)
+  - External wrench estimate (`O_F_ext_hat`)
+- Full robot dynamics API
+  - `pose`
+  - `zeroJacobian`
+  - `bodyJacobian`
+  - `mass`
+  - `gravity`
+  - `coriolis`
+- Native MuJoCo camera support through `mujoco_ros_pkgs`
+- Support for robots with additional degrees of freedom using the forked `mujoco_ros2_control_system` package (see `garmi_packages/garmi_description/robots/*.ros2_control.xacro` for examples)
+
 
 ## Installation — Windows 11
 
@@ -426,7 +456,24 @@ node.destroy_node()
 rclpy.shutdown()
 PYEOF
 ```
+### Acknowledgments
 
+This project is built upon the excellent work of **tenfold** and the original **multipanda_ros2** repository, which introduced multi-arm MuJoCo simulation and real/simulation control interfaces.
+
+It also incorporates and extends many capabilities originally provided by **franka_ros**, bringing them to **ROS 2 Humble** for the **Franka Emika Panda** robot. While official ROS 2 support for the Panda was discontinued, this repository continues to build upon the community-driven ecosystem established by both **franka_ros** and **multipanda_ros2**.
+
+Special thanks to:
+
+- **tenfold** for the excellent **multipanda_ros2** foundation.
+- The **Franka Robotics** and **franka_ros** developers for their pioneering work.
+- The **BRIDGE (ERASMUS+ CBHE)** project for supporting robotics education and international collaboration.
+
+
+## Author
+
+**Zain Ali Zahid**  
+Department of Mechatronics and Control Engineering  
+University of Engineering and Technology (UET) Lahore
 
 ## License
 
