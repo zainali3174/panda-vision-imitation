@@ -1,10 +1,26 @@
-# 🌟 BRIDGE: ERASMUS+ CBHE Robotics Bootcamp (UET Lahore)
+# 🐼 Panda Vision & Imitation Learning (`panda-vision-imitation`)
 
-This repository contains the software, exercises, and supporting materials developed for the **BRIDGE (ERASMUS+ Capacity Building in Higher Education)** Robotics Bootcamp held at **UET Lahore** on **August 3–5, 2026**.
+This repository is a ROS 2 Humble and MuJoCo-based framework dedicated to **vision-based manipulation and imitation learning** using the Franka Emika Panda robot. 
 
-The repository was created as a **hands-on, reproducible training platform** for learning robotic manipulation using **ROS 2 Humble**, **MuJoCo**, and the **Franka Emika Panda** robot. It contains structured exercises, demonstrations, and practical tasks that enable participants to gain experience in simulation, robot control, motion planning, and software development.
+Building upon robust Cartesian control and motion planning foundations, this project aims to bridge the gap between classic analytical robotics and modern data-driven learning approaches. It provides a complete simulation-to-reality pipeline for developing, testing, and deploying complex visuomotor policies.
 
-A key objective of this repository is to provide a framework that can be readily adopted by faculty members, researchers, and students from partner universities. The exercises and workflows are designed to be easily reproducible, allowing institutions to integrate modern robotics education into their own teaching and research activities.
+---
+
+## 🚀 Project Roadmap
+
+*   [x] **Phase 1: Core Manipulation & Control**
+    *   Custom Cartesian control package (`panda_cartesian_control`)
+    *   HTM (Homogeneous Transformation Matrix) action servers for direct end-effector control
+    *   Pinocchio-based Inverse Kinematics for improved numerical robustness
+    *   CHOMP + RRTConnect fallback motion planning
+*   [ ] **Phase 2: Vision-Based Manipulation (Current Focus)**
+    *   Integrating RGB-D camera feeds in MuJoCo simulation
+    *   Object detection and 6D pose estimation pipeline
+    *   Dynamic, vision-driven pick-and-place action server
+*   [ ] **Phase 3: Imitation Learning (Upcoming)**
+    *   Data collection pipelines (teleoperation and kinesthetic teaching)
+    *   Trajectory modeling and reproduction (e.g., DMPs, Behavioral Cloning)
+    *   End-to-end visuomotor policy training
 
 ---
 <h3 align="center">Project Gallery</h3>
@@ -466,14 +482,7 @@ Special thanks to:
 
 - **tenfold** for the excellent **multipanda_ros2** foundation.
 - The **Franka Robotics** and **franka_ros** developers for their pioneering work.
-- The **BRIDGE (ERASMUS+ CBHE)** project for supporting robotics education and international collaboration.
 
-
-## Author
-
-**Zain Ali Zahid**  
-Department of Mechatronics and Control Engineering  
-University of Engineering and Technology (UET) Lahore
 
 ## License
 
