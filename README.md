@@ -101,7 +101,7 @@ wsl --install -d Ubuntu
 * **If it does not ask for a username or password:** Wait for the command to finish, then **reboot your device**. After restarting, the Ubuntu setup may resume automatically. Let it finish, then create a **new Linux username and password** when prompted. If nothing opens automatically after reboot, launch **Ubuntu** app from the Start menu to continue the setup.
 
 
-Open a **separate** `cmd` window aas administrator and run:
+Open a **separate** `cmd` window as administrator and run:
 
 ```bash
 wsl -l -v
@@ -178,7 +178,7 @@ sudo apt install -y x11-xserver-utils
 ```
 If asked for a password, its 123.
 
-Install pinnochio:
+Install pinocchio:
 
 ```bash
 pip install pin
@@ -267,9 +267,9 @@ cd multipanda_ros2
 ```bash
 ./run
 ```
-Install pinnochio:
+Install pinocchio:
 
-'```bash
+```bash
 pip install pin
 ```
 
@@ -324,7 +324,7 @@ docker exec -it --user developer multipanda-container bash
 
 Run the commands below inside the container unless noted otherwise.
 
-## Start Mujuco, RViz and related nodes
+## Start MuJoCo, RViz and related nodes
 
 ```bash
 # Terminal 1
@@ -424,7 +424,7 @@ rclpy.shutdown()
 PYEOF
 ```
 
-**Removing/ the obstacle**
+**Removing the obstacle**
 ```bash
 python3 << 'PYEOF'
 import rclpy
