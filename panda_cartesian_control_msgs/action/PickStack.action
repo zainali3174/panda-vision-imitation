@@ -1,0 +1,14 @@
+float64[3] place_xyz
+float64 cube_height     # vertical increment per stacked cube, meters
+float64 z_offset        # approach height above pick/place, meters
+float64 grasp_width     # expected object width, meters
+float64 grasp_force     # grip force, Newtons
+---
+bool success
+int32 cubes_stacked
+string error
+---
+string stage
+int32 current_cube
+int32 total_cubes
+float32 progress

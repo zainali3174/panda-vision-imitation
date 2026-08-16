@@ -13,8 +13,11 @@ find_package(rosidl_default_generators REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
   "action/HTMMotion.action"
   "action/PickPlace.action"
+  "action/PickStack.action"
   "srv/ObjectToRobot.srv"
   "srv/PickFromCamera.srv"
+  "msg/DetectedObject.msg"
+  "msg/DetectedObjects.msg"
   DEPENDENCIES action_msgs
 )
 
