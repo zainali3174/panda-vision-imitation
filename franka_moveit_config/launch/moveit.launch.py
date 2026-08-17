@@ -20,12 +20,13 @@ import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import (DeclareLaunchArgument, ExecuteProcess, IncludeLaunchDescription,
-                            Shutdown)
+                            Shutdown, TimerAction)
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
+from launch_ros.parameter_descriptions import ParameterValue
 import yaml
 
 
@@ -55,6 +56,31 @@ def generate_launch_description():
     db_arg = DeclareLaunchArgument(
         'db', default_value='False', description='Database flag'
     )
+
+    # NEW: args for the panda_cartesian_control application nodes
+    use_sim_parameter_name = 'use_sim'
+    joint_states_topic_parameter_name = 'joint_states_topic'
+    app_startup_delay_parameter_name = 'app_startup_delay'
+
+    use_sim_arg = DeclareLaunchArgument(
+        use_sim_parameter_name, default_value='false',
+        description='pick_place_server: true for MuJoCo sim, false for the real Franka '
+                    '(this launch file is the hardware path, so default is false)')
+
+    joint_states_topic_arg = DeclareLaunchArgument(
+        joint_states_topic_parameter_name, default_value='franka/joint_states',
+        description='cartesian_moveit_server: joint states topic. Defaults to '
+                    'franka/joint_states to match the remap on ros2_control_node below.')
+
+    app_startup_delay_arg = DeclareLaunchArgument(
+        app_startup_delay_parameter_name, default_value='6.0',
+        description='Seconds to wait before starting cartesian_moveit_server, '
+                    'pick_place_server, camera_node, and ps_sequencer, so move_group, '
+                    'controllers, and the gripper action servers are up first.')
+
+    use_sim = LaunchConfiguration(use_sim_parameter_name)
+    joint_states_topic = LaunchConfiguration(joint_states_topic_parameter_name)
+    app_startup_delay = LaunchConfiguration(app_startup_delay_parameter_name)
 
     # planning_context
     franka_xacro_file = os.path.join(get_package_share_directory('franka_description'), 'robots', 'real',
@@ -110,7 +136,6 @@ def generate_launch_description():
                                 'default_planner_request_adapters/ResolveConstraintFrames '
                                 'default_planner_request_adapters/FixWorkspaceBounds '
                                 'default_planner_request_adapters/FixStartStateBounds '
-                                'default_planner_request_adapters/FixStartStateCollision '
                                 'default_planner_request_adapters/FixStartStatePathConstraints',
             'start_state_max_bounds_error': 0.1,
         }
@@ -119,7 +144,7 @@ def generate_launch_description():
     chomp_planning_yaml = load_yaml(
         'franka_moveit_config', 'config/chomp_planning.yaml'
     )
-    
+
     if chomp_planning_yaml:
         chomp_planning_pipeline_config['chomp'].update(chomp_planning_yaml)
 
@@ -275,12 +300,64 @@ def generate_launch_description():
                           use_fake_hardware_parameter_name: use_fake_hardware}.items(),
         condition=IfCondition(load_gripper)
     )
+
+    # NEW: the panda_cartesian_control application nodes -- cartesian_moveit_server,
+    # pick_place_server, camera_node, ps_sequencer. Delayed via TimerAction so
+    # move_group, the controllers, and the gripper action servers have time to
+    # come up first (see app_startup_delay_arg above).
+    cartesian_moveit_server = Node(
+        package='panda_cartesian_control',
+        executable='cartesian_moveit_server',
+        name='cartesian_moveit_server',
+        output='screen',
+        parameters=[{'joint_states_topic': joint_states_topic}],
+    )
+
+    pick_place_server = Node(
+        package='panda_cartesian_control',
+        executable='pick_place_server',
+        name='pick_place_server',
+        output='screen',
+        # use_sim is declared as a strict BOOL param with no default in the
+        # node, so it must arrive as an actual bool, not the plain string a
+        # LaunchConfiguration would otherwise pass -- ParameterValue enforces
+        # the cast to bool here.
+        parameters=[{'use_sim': ParameterValue(use_sim, value_type=bool)}],
+    )
+
+    camera_node = Node(
+        package='panda_cartesian_control',
+        executable='camera_node',
+        name='camera_node',
+        output='screen',
+    )
+
+    ps_sequencer = Node(
+        package='panda_cartesian_control',
+        executable='ps_sequencer',
+        name='ps_sequencer',
+        output='screen',
+    )
+
+    app_nodes = TimerAction(
+        period=app_startup_delay,
+        actions=[
+            cartesian_moveit_server,
+            pick_place_server,
+            camera_node,
+            ps_sequencer,
+        ],
+    )
+
     return LaunchDescription(
         [robot_arg,
          use_fake_hardware_arg,
          fake_sensor_commands_arg,
          load_gripper_arg,
          db_arg,
+         use_sim_arg,                 # NEW
+         joint_states_topic_arg,      # NEW
+         app_startup_delay_arg,       # NEW
          rviz_node,
          robot_state_publisher,
          run_move_group_node,
@@ -289,5 +366,6 @@ def generate_launch_description():
          joint_state_publisher,
          gripper_launch_file
          ]
-        + load_controllers 
+        + load_controllers
+        + [app_nodes]                 # NEW
     )
