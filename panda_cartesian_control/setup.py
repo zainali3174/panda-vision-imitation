@@ -30,7 +30,7 @@ setup(
                 'camera_to_robot_node = panda_cartesian_control.camera_to_robot_node:main',
                 'pick_from_camera_node = panda_cartesian_control.pick_from_camera_node:main',
                 'cartesian_pick_place_server = panda_cartesian_control.cartesian_pick_place_server:main',
-                'camera_node = panda_cartesian_control.camera_node:main'
+                'camera_node = panda_cartesian_control.camera_node:main',
                 'ps_sequencer = panda_cartesian_control.ps_sequencer:main',
 
         ],

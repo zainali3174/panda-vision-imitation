@@ -1,0 +1,71 @@
+[0.420s] Invoking command in '/home/developer/multipanda_ws/src/panda_cartesian_control': PYTHONPATH=/home/developer/multipanda_ws/src/panda_cartesian_control/build/panda_cartesian_control/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/developer/multipanda_ws/src/panda_cartesian_control/install/panda_cartesian_control/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base build/panda_cartesian_control build --build-base /home/developer/multipanda_ws/src/panda_cartesian_control/build/panda_cartesian_control/build install --record /home/developer/multipanda_ws/src/panda_cartesian_control/build/panda_cartesian_control/install.log --single-version-externally-managed install_data
+[0.563s] running egg_info
+[0.563s] creating build/panda_cartesian_control/panda_cartesian_control.egg-info
+[0.563s] writing build/panda_cartesian_control/panda_cartesian_control.egg-info/PKG-INFO
+[0.563s] writing dependency_links to build/panda_cartesian_control/panda_cartesian_control.egg-info/dependency_links.txt
+[0.563s] writing entry points to build/panda_cartesian_control/panda_cartesian_control.egg-info/entry_points.txt
+[0.563s] writing requirements to build/panda_cartesian_control/panda_cartesian_control.egg-info/requires.txt
+[0.564s] writing top-level names to build/panda_cartesian_control/panda_cartesian_control.egg-info/top_level.txt
+[0.564s] writing manifest file 'build/panda_cartesian_control/panda_cartesian_control.egg-info/SOURCES.txt'
+[0.564s] reading manifest file 'build/panda_cartesian_control/panda_cartesian_control.egg-info/SOURCES.txt'
+[0.565s] writing manifest file 'build/panda_cartesian_control/panda_cartesian_control.egg-info/SOURCES.txt'
+[0.565s] running build
+[0.565s] running build_py
+[0.565s] creating /home/developer/multipanda_ws/src/panda_cartesian_control/build/panda_cartesian_control/build
+[0.565s] creating /home/developer/multipanda_ws/src/panda_cartesian_control/build/panda_cartesian_control/build/lib
+[0.566s] creating /home/developer/multipanda_ws/src/panda_cartesian_control/build/panda_cartesian_control/build/lib/panda_cartesian_control
+[0.566s] copying panda_cartesian_control/__init__.py -> /home/developer/multipanda_ws/src/panda_cartesian_control/build/panda_cartesian_control/build/lib/panda_cartesian_control
+[0.566s] copying panda_cartesian_control/cartesian_pick_place_server.py -> /home/developer/multipanda_ws/src/panda_cartesian_control/build/panda_cartesian_control/build/lib/panda_cartesian_control
+[0.566s] copying panda_cartesian_control/pick_from_camera_node.py -> /home/developer/multipanda_ws/src/panda_cartesian_control/build/panda_cartesian_control/build/lib/panda_cartesian_control
+[0.566s] copying panda_cartesian_control/cartesian_moveit_server.py -> /home/developer/multipanda_ws/src/panda_cartesian_control/build/panda_cartesian_control/build/lib/panda_cartesian_control
+[0.566s] copying panda_cartesian_control/pick_place_server.py -> /home/developer/multipanda_ws/src/panda_cartesian_control/build/panda_cartesian_control/build/lib/panda_cartesian_control
+[0.566s] copying panda_cartesian_control/ps_sequencer.py -> /home/developer/multipanda_ws/src/panda_cartesian_control/build/panda_cartesian_control/build/lib/panda_cartesian_control
+[0.566s] copying panda_cartesian_control/camera_node.py -> /home/developer/multipanda_ws/src/panda_cartesian_control/build/panda_cartesian_control/build/lib/panda_cartesian_control
+[0.566s] copying panda_cartesian_control/camera_to_robot_node.py -> /home/developer/multipanda_ws/src/panda_cartesian_control/build/panda_cartesian_control/build/lib/panda_cartesian_control
+[0.567s] creating /home/developer/multipanda_ws/src/panda_cartesian_control/build/panda_cartesian_control/build/lib/panda_cartesian_control/pinocchio_ik
+[0.567s] copying panda_cartesian_control/pinocchio_ik/solver.py -> /home/developer/multipanda_ws/src/panda_cartesian_control/build/panda_cartesian_control/build/lib/panda_cartesian_control/pinocchio_ik
+[0.567s] copying panda_cartesian_control/pinocchio_ik/__init__.py -> /home/developer/multipanda_ws/src/panda_cartesian_control/build/panda_cartesian_control/build/lib/panda_cartesian_control/pinocchio_ik
+[0.567s] running install
+[0.567s] running install_lib
+[0.568s] creating /home/developer/multipanda_ws/src/panda_cartesian_control/install/panda_cartesian_control/lib/python3.10/site-packages/panda_cartesian_control
+[0.568s] creating /home/developer/multipanda_ws/src/panda_cartesian_control/install/panda_cartesian_control/lib/python3.10/site-packages/panda_cartesian_control/pinocchio_ik
+[0.568s] copying /home/developer/multipanda_ws/src/panda_cartesian_control/build/panda_cartesian_control/build/lib/panda_cartesian_control/pinocchio_ik/solver.py -> /home/developer/multipanda_ws/src/panda_cartesian_control/install/panda_cartesian_control/lib/python3.10/site-packages/panda_cartesian_control/pinocchio_ik
+[0.568s] copying /home/developer/multipanda_ws/src/panda_cartesian_control/build/panda_cartesian_control/build/lib/panda_cartesian_control/pinocchio_ik/__init__.py -> /home/developer/multipanda_ws/src/panda_cartesian_control/install/panda_cartesian_control/lib/python3.10/site-packages/panda_cartesian_control/pinocchio_ik
+[0.568s] copying /home/developer/multipanda_ws/src/panda_cartesian_control/build/panda_cartesian_control/build/lib/panda_cartesian_control/__init__.py -> /home/developer/multipanda_ws/src/panda_cartesian_control/install/panda_cartesian_control/lib/python3.10/site-packages/panda_cartesian_control
+[0.568s] copying /home/developer/multipanda_ws/src/panda_cartesian_control/build/panda_cartesian_control/build/lib/panda_cartesian_control/cartesian_pick_place_server.py -> /home/developer/multipanda_ws/src/panda_cartesian_control/install/panda_cartesian_control/lib/python3.10/site-packages/panda_cartesian_control
+[0.568s] copying /home/developer/multipanda_ws/src/panda_cartesian_control/build/panda_cartesian_control/build/lib/panda_cartesian_control/pick_from_camera_node.py -> /home/developer/multipanda_ws/src/panda_cartesian_control/install/panda_cartesian_control/lib/python3.10/site-packages/panda_cartesian_control
+[0.568s] copying /home/developer/multipanda_ws/src/panda_cartesian_control/build/panda_cartesian_control/build/lib/panda_cartesian_control/cartesian_moveit_server.py -> /home/developer/multipanda_ws/src/panda_cartesian_control/install/panda_cartesian_control/lib/python3.10/site-packages/panda_cartesian_control
+[0.568s] copying /home/developer/multipanda_ws/src/panda_cartesian_control/build/panda_cartesian_control/build/lib/panda_cartesian_control/pick_place_server.py -> /home/developer/multipanda_ws/src/panda_cartesian_control/install/panda_cartesian_control/lib/python3.10/site-packages/panda_cartesian_control
+[0.568s] copying /home/developer/multipanda_ws/src/panda_cartesian_control/build/panda_cartesian_control/build/lib/panda_cartesian_control/ps_sequencer.py -> /home/developer/multipanda_ws/src/panda_cartesian_control/install/panda_cartesian_control/lib/python3.10/site-packages/panda_cartesian_control
+[0.568s] copying /home/developer/multipanda_ws/src/panda_cartesian_control/build/panda_cartesian_control/build/lib/panda_cartesian_control/camera_node.py -> /home/developer/multipanda_ws/src/panda_cartesian_control/install/panda_cartesian_control/lib/python3.10/site-packages/panda_cartesian_control
+[0.568s] copying /home/developer/multipanda_ws/src/panda_cartesian_control/build/panda_cartesian_control/build/lib/panda_cartesian_control/camera_to_robot_node.py -> /home/developer/multipanda_ws/src/panda_cartesian_control/install/panda_cartesian_control/lib/python3.10/site-packages/panda_cartesian_control
+[0.569s] byte-compiling /home/developer/multipanda_ws/src/panda_cartesian_control/install/panda_cartesian_control/lib/python3.10/site-packages/panda_cartesian_control/pinocchio_ik/solver.py to solver.cpython-310.pyc
+[0.569s] byte-compiling /home/developer/multipanda_ws/src/panda_cartesian_control/install/panda_cartesian_control/lib/python3.10/site-packages/panda_cartesian_control/pinocchio_ik/__init__.py to __init__.cpython-310.pyc
+[0.569s] byte-compiling /home/developer/multipanda_ws/src/panda_cartesian_control/install/panda_cartesian_control/lib/python3.10/site-packages/panda_cartesian_control/__init__.py to __init__.cpython-310.pyc
+[0.569s] byte-compiling /home/developer/multipanda_ws/src/panda_cartesian_control/install/panda_cartesian_control/lib/python3.10/site-packages/panda_cartesian_control/cartesian_pick_place_server.py to cartesian_pick_place_server.cpython-310.pyc
+[0.571s] byte-compiling /home/developer/multipanda_ws/src/panda_cartesian_control/install/panda_cartesian_control/lib/python3.10/site-packages/panda_cartesian_control/pick_from_camera_node.py to pick_from_camera_node.cpython-310.pyc
+[0.571s] byte-compiling /home/developer/multipanda_ws/src/panda_cartesian_control/install/panda_cartesian_control/lib/python3.10/site-packages/panda_cartesian_control/cartesian_moveit_server.py to cartesian_moveit_server.cpython-310.pyc
+[0.573s] byte-compiling /home/developer/multipanda_ws/src/panda_cartesian_control/install/panda_cartesian_control/lib/python3.10/site-packages/panda_cartesian_control/pick_place_server.py to pick_place_server.cpython-310.pyc
+[0.573s] byte-compiling /home/developer/multipanda_ws/src/panda_cartesian_control/install/panda_cartesian_control/lib/python3.10/site-packages/panda_cartesian_control/ps_sequencer.py to ps_sequencer.cpython-310.pyc
+[0.574s] byte-compiling /home/developer/multipanda_ws/src/panda_cartesian_control/install/panda_cartesian_control/lib/python3.10/site-packages/panda_cartesian_control/camera_node.py to camera_node.cpython-310.pyc
+[0.575s] byte-compiling /home/developer/multipanda_ws/src/panda_cartesian_control/install/panda_cartesian_control/lib/python3.10/site-packages/panda_cartesian_control/camera_to_robot_node.py to camera_to_robot_node.cpython-310.pyc
+[0.576s] running install_data
+[0.576s] creating /home/developer/multipanda_ws/src/panda_cartesian_control/install/panda_cartesian_control/share/ament_index
+[0.576s] creating /home/developer/multipanda_ws/src/panda_cartesian_control/install/panda_cartesian_control/share/ament_index/resource_index
+[0.576s] creating /home/developer/multipanda_ws/src/panda_cartesian_control/install/panda_cartesian_control/share/ament_index/resource_index/packages
+[0.576s] copying resource/panda_cartesian_control -> /home/developer/multipanda_ws/src/panda_cartesian_control/install/panda_cartesian_control/share/ament_index/resource_index/packages
+[0.576s] copying package.xml -> /home/developer/multipanda_ws/src/panda_cartesian_control/install/panda_cartesian_control/share/panda_cartesian_control
+[0.576s] creating /home/developer/multipanda_ws/src/panda_cartesian_control/install/panda_cartesian_control/share/panda_cartesian_control/urdf
+[0.576s] copying urdf/panda_arm.urdf -> /home/developer/multipanda_ws/src/panda_cartesian_control/install/panda_cartesian_control/share/panda_cartesian_control/urdf
+[0.576s] running install_egg_info
+[0.577s] Copying build/panda_cartesian_control/panda_cartesian_control.egg-info to /home/developer/multipanda_ws/src/panda_cartesian_control/install/panda_cartesian_control/lib/python3.10/site-packages/panda_cartesian_control-0.0.0-py3.10.egg-info
+[0.578s] running install_scripts
+[0.592s] Installing camera_node script to /home/developer/multipanda_ws/src/panda_cartesian_control/install/panda_cartesian_control/lib/panda_cartesian_control
+[0.592s] Installing camera_to_robot_node script to /home/developer/multipanda_ws/src/panda_cartesian_control/install/panda_cartesian_control/lib/panda_cartesian_control
+[0.592s] Installing cartesian_moveit_server script to /home/developer/multipanda_ws/src/panda_cartesian_control/install/panda_cartesian_control/lib/panda_cartesian_control
+[0.592s] Installing cartesian_pick_place_server script to /home/developer/multipanda_ws/src/panda_cartesian_control/install/panda_cartesian_control/lib/panda_cartesian_control
+[0.592s] Installing pick_from_camera_node script to /home/developer/multipanda_ws/src/panda_cartesian_control/install/panda_cartesian_control/lib/panda_cartesian_control
+[0.592s] Installing pick_place_server script to /home/developer/multipanda_ws/src/panda_cartesian_control/install/panda_cartesian_control/lib/panda_cartesian_control
+[0.592s] Installing ps_sequencer script to /home/developer/multipanda_ws/src/panda_cartesian_control/install/panda_cartesian_control/lib/panda_cartesian_control
+[0.592s] writing list of installed files to '/home/developer/multipanda_ws/src/panda_cartesian_control/build/panda_cartesian_control/install.log'
+[0.606s] Invoked command in '/home/developer/multipanda_ws/src/panda_cartesian_control' returned '0': PYTHONPATH=/home/developer/multipanda_ws/src/panda_cartesian_control/build/panda_cartesian_control/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/developer/multipanda_ws/src/panda_cartesian_control/install/panda_cartesian_control/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base build/panda_cartesian_control build --build-base /home/developer/multipanda_ws/src/panda_cartesian_control/build/panda_cartesian_control/build install --record /home/developer/multipanda_ws/src/panda_cartesian_control/build/panda_cartesian_control/install.log --single-version-externally-managed install_data
