@@ -33,7 +33,7 @@ from panda_cartesian_control_msgs.msg import DetectedObject, DetectedObjects
 # ---------------------------------------------------------------------------
 # Camera / detection config
 # ---------------------------------------------------------------------------
-MARKER_LENGTH = 0.05
+MARKER_LENGTH = 0.0475
 DICTIONARY = aruco.DICT_APRILTAG_36h11
 STREAM_WIDTH, STREAM_HEIGHT, STREAM_FPS = 1280, 720, 15
 MANUAL_EXPOSURE = 150
@@ -42,7 +42,7 @@ MIN_MARKER_PERIMETER_RATE = 0.01
 # ---------------------------------------------------------------------------
 # Confirmation / debounce config
 # ---------------------------------------------------------------------------
-SAMPLES_NEEDED = 15
+SAMPLES_NEEDED = 12
 MOVE_THRESHOLD_M = 0.03        # how far a sample must be from the reference to look like a move
 MOVE_CONFIRM_SAMPLES = 5       # how many consistent samples in a row confirm a real move
 STALE_TIMEOUT_SEC = 2.0        # drop a tag if it hasn't been re-seen within this long
@@ -50,20 +50,27 @@ STALE_TIMEOUT_SEC = 2.0        # drop a tag if it hasn't been re-seen within thi
 # ---------------------------------------------------------------------------
 # Camera -> robot base transform (from eye-to-hand calibration)
 # ---------------------------------------------------------------------------
+#BASE_T_CAMERA = np.array([
+#    [ 0.006804, -0.998319, -0.057565,  0.563716],
+#    [-0.998902, -0.009454,  0.045875,  0.046939],
+#    [-0.046342,  0.057190, -0.997287,  1.728049],
+#    [ 0.0,       0.0,       0.0,       1.0],
+#])
 BASE_T_CAMERA = np.array([
-    [ 0.006804, -0.998319, -0.057565,  0.563716],
-    [-0.998902, -0.009454,  0.045875,  0.046939],
-    [-0.046342,  0.057190, -0.997287,  1.728049],
-    [ 0.0,       0.0,       0.0,       1.0],
+    [-0.0000101775, -0.964732004, -0.055322304, 0.558715725],
+    [-0.965277885,  -0.002554345,  0.044708214, 0.042059743],
+    [-0.046342000,   0.057190000, -0.997287000, 1.728049000],
+    [ 0.0,           0.0,          0.0,           1.0],
 ])
+
 
 # ---------------------------------------------------------------------------
 # Robot-frame correction (applied AFTER the transform above, only on the
 # robot_frame topic -- camera_frame stays raw)
 # ---------------------------------------------------------------------------
-OFFSET_X = -0.009   # meters, empirical x correction (from original hand-tuned offset)
-OFFSET_Y = 0.011    # meters, empirical y correction (from original hand-tuned offset)
-FIXED_Z = 0.15      # meters, hardcoded z -- the calibration is unreliable in z (transformed
+OFFSET_X = 0   # meters, empirical x correction (from original hand-tuned offset)
+OFFSET_Y = 0    # meters, empirical y correction (from original hand-tuned offset)
+FIXED_Z = 0.15     # meters, hardcoded z -- the calibration is unreliable in z (transformed
                      # z was landing inside the table), so override it outright rather than
                      # trying to offset-correct it
 
@@ -385,4 +392,4 @@ def main(args=None):
             rclpy.shutdown()
 
 if __name__ == '__main__':
-    main()  
+    main()
