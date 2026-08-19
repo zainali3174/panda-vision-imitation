@@ -17,6 +17,10 @@ location (x, y, z) and a cube height, it:
   4. Reports progress ("cube 2 of 4") as PickStack feedback, and the
      final count of cubes actually stacked as the result.
 
+Each pick_place call is given only the tag id to pick -- pick_place_server
+tracks that tag's live position itself, so this node doesn't need to
+resnapshot or chase positions during execution.
+
 Uses a ReentrantCallbackGroup + MultiThreadedExecutor because this node
 blocks synchronously (via rclpy.spin_until_future_complete) inside its
 own action-server callback while waiting on the pick_place action. Under
@@ -60,9 +64,9 @@ class PsSequencer(Node):
     def objects_callback(self, msg):
         self._latest_objects = list(msg.objects)
 
-    def send_pick_place(self, pick_xyz, place_xyz, z_offset, grasp_width, grasp_force):
+    def send_pick_place(self, pick_tag_id, place_xyz, z_offset, grasp_width, grasp_force):
         goal = PickPlace.Goal()
-        goal.pick_xyz = list(pick_xyz)
+        goal.pick_tag_id = pick_tag_id
         goal.place_xyz = list(place_xyz)
         goal.z_offset = z_offset
         goal.grasp_width = grasp_width
@@ -118,11 +122,10 @@ class PsSequencer(Node):
             feedback.progress = float(i) / total
             goal_handle.publish_feedback(feedback)
 
-            pick_xyz = [obj.x, obj.y, obj.z]
             place_xyz = [base_xyz[0], base_xyz[1], base_xyz[2] + i * req.cube_height]
 
             ok, err = self.send_pick_place(
-                pick_xyz, place_xyz, req.z_offset, req.grasp_width, req.grasp_force)
+                obj.id, place_xyz, req.z_offset, req.grasp_width, req.grasp_force)
 
             if not ok:
                 self.get_logger().error(f'Failed on tag {obj.id}: {err}')

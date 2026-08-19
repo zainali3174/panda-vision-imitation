@@ -1,4 +1,4 @@
-float64[3] pick_xyz
+int32 pick_tag_id
 float64[3] place_xyz
 float64 z_offset       # approach height above pick/place, meters
 float64 grasp_width    # expected object width, meters

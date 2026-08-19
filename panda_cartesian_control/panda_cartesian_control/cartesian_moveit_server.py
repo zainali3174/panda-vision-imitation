@@ -3,7 +3,9 @@ import math
 import numpy as np
 import rclpy
 from rclpy.node import Node
-from rclpy.action import ActionServer, ActionClient
+from rclpy.action import ActionServer, ActionClient, CancelResponse, GoalResponse
+from rclpy.callback_groups import ReentrantCallbackGroup
+from rclpy.executors import MultiThreadedExecutor
 from geometry_msgs.msg import PoseStamped
 from sensor_msgs.msg import JointState
 from moveit_msgs.action import MoveGroup
@@ -57,8 +59,6 @@ class CartesianMoveitServer(Node):
         self.ee_link = 'panda_link8'
         self.group_name = 'panda_arm'
 
-        # FIX: was hardcoded '/joint_states'; real hardware remaps this to
-        # 'franka/joint_states'. Pass via launch instead of guessing.
         self.declare_parameter('joint_states_topic', '/joint_states')
         joint_states_topic = self.get_parameter('joint_states_topic').get_parameter_value().string_value
 
@@ -67,13 +67,27 @@ class CartesianMoveitServer(Node):
         self.joint_names = solver.get_joint_names()
         self.current_q = solver.Q_PREFERRED.copy()
 
-        self._move_client = ActionClient(self, MoveGroup, 'move_action')
+        cb_group = ReentrantCallbackGroup()
+
+        # Tracks the currently in-flight MoveGroup goal handle so a
+        # cancel on the HTMMotion goal can be forwarded to it. Only one
+        # HTM goal is ever active at a time (single-goal server), so a
+        # single attribute is sufficient.
+        self._active_move_goal_handle = None
+        self._cancel_requested = False
+
+        self._move_client = ActionClient(
+            self, MoveGroup, 'move_action', callback_group=cb_group)
 
         self._joint_state_sub = self.create_subscription(
-            JointState, joint_states_topic, self.joint_state_callback, 10)
+            JointState, joint_states_topic, self.joint_state_callback, 10,
+            callback_group=cb_group)
 
         self._server = ActionServer(
-            self, HTMMotion, 'htm_motion', self.execute_callback)
+            self, HTMMotion, 'htm_motion',
+            execute_callback=self.execute_callback,
+            cancel_callback=self.cancel_callback,
+            callback_group=cb_group)
 
         self.get_logger().info(
             f'HTM MoveIt action server ready (Pinocchio IK + CHOMP, fallback to OMPL RRTConnect). '
@@ -86,6 +100,22 @@ class CartesianMoveitServer(Node):
             if name in pos_map:
                 q[i] = pos_map[name]
         self.current_q = np.array(q)
+
+    def cancel_callback(self, cancel_request):
+        self.get_logger().info('Cancel request received for htm_motion goal.')
+        self._cancel_requested = True
+        return CancelResponse.ACCEPT
+
+    async def cancel_active_move_goal(self):
+        """Forward the cancel down to whatever MoveGroup goal is currently
+        in flight, so the arm actually stops instead of finishing the
+        stale trajectory underneath a 'cancelled' HTM goal."""
+        if self._active_move_goal_handle is not None:
+            self.get_logger().info('Forwarding cancel to active MoveGroup goal.')
+            try:
+                await self._active_move_goal_handle.cancel_goal_async()
+            except Exception as e:
+                self.get_logger().warn(f'Failed to cancel MoveGroup goal: {e}')
 
     def htm_to_pose_and_rot(self, htm):
         rot = [
@@ -160,33 +190,34 @@ class CartesianMoveitServer(Node):
         goal.planning_options.plan_only = False
         return goal
 
-    def send_move_goal(self, move_goal):
-        """Send a MoveGroup goal and wait for the result.
+    async def send_move_goal(self, move_goal):
+        """Send a MoveGroup goal and await the result.
         Returns (success: bool, error_code: int)."""
-        # FIX: bounded wait instead of unbounded wait_for_server()
         if not self._move_client.wait_for_server(timeout_sec=5.0):
             self.get_logger().error('move_action server not available')
             return False, -2  # server unavailable
 
-        send_future = self._move_client.send_goal_async(move_goal)
-        rclpy.spin_until_future_complete(self, send_future)
-        move_goal_handle = send_future.result()
+        move_goal_handle = await self._move_client.send_goal_async(move_goal)
 
         if move_goal_handle is None:
             return False, -3  # send_goal_async returned no result
         if not move_goal_handle.accepted:
             return False, -1  # rejected before planning
 
-        result_future = move_goal_handle.get_result_async()
-        rclpy.spin_until_future_complete(self, result_future)
-        wrapped_result = result_future.result()
+        # Track so a cancel on the outer HTMMotion goal can be forwarded here.
+        self._active_move_goal_handle = move_goal_handle
+
+        wrapped_result = await move_goal_handle.get_result_async()
+
+        self._active_move_goal_handle = None
+
         if wrapped_result is None:
             return False, -4  # get_result_async returned no result
         move_result = wrapped_result.result
 
         return (move_result.error_code.val == 1), move_result.error_code.val
 
-    def move_to_pose(self, pose: PoseStamped, rot, v_scale: float):
+    async def move_to_pose(self, pose: PoseStamped, rot, v_scale: float):
         """Solve IK via Pinocchio, then try CHOMP first; fall back to OMPL
         RRTConnect if CHOMP's plan is invalid/fails. Returns (success, error_message)."""
         target_pos = [pose.pose.position.x, pose.pose.position.y, pose.pose.position.z]
@@ -194,26 +225,34 @@ class CartesianMoveitServer(Node):
         if joint_state is None:
             return False, err
 
+        if self._cancel_requested:
+            return False, 'cancelled before planning'
+
         # Attempt 1: CHOMP (smooth, consistent, but weaker obstacle avoidance)
         chomp_goal = self.build_joint_goal(joint_state, pose, v_scale, 'chomp', 'CHOMP', use_orientation_constraint=True)
-        success, code = self.send_move_goal(chomp_goal)
+        success, code = await self.send_move_goal(chomp_goal)
         if success:
             self.current_q = np.array(joint_state.position)
             return True, ''
+
+        if self._cancel_requested:
+            return False, 'cancelled'
 
         self.get_logger().warn(
             f'CHOMP failed (error code {code}), falling back to OMPL RRTConnect')
 
         # Attempt 2: OMPL RRTConnect (reliable global obstacle avoidance)
         ompl_goal = self.build_joint_goal(joint_state, None, v_scale, 'ompl', 'RRTConnectkConfigDefault', use_orientation_constraint=False)
-        success, code = self.send_move_goal(ompl_goal)
+        success, code = await self.send_move_goal(ompl_goal)
         if success:
             self.current_q = np.array(joint_state.position)
             return True, ''
 
         return False, f'Both CHOMP and OMPL RRTConnect failed, last error code {code}'
 
-    def execute_callback(self, goal_handle):
+    async def execute_callback(self, goal_handle):
+        self._cancel_requested = False
+
         htm = goal_handle.request.htm
         v_scale = goal_handle.request.v_scale
         result = HTMMotion.Result()
@@ -228,7 +267,15 @@ class CartesianMoveitServer(Node):
 
         target_pose, target_rot = self.htm_to_pose_and_rot(htm)
 
-        success, err = self.move_to_pose(target_pose, target_rot, v_scale if v_scale > 0.0 else 0.3)
+        success, err = await self.move_to_pose(
+            target_pose, target_rot, v_scale if v_scale > 0.0 else 0.3)
+
+        if goal_handle.is_cancel_requested:
+            await self.cancel_active_move_goal()
+            goal_handle.canceled()
+            result.success = False
+            result.error = err or 'cancelled'
+            return result
 
         if not success:
             self.get_logger().error(f'Motion failed: {err}')
@@ -249,8 +296,17 @@ class CartesianMoveitServer(Node):
 def main(args=None):
     rclpy.init(args=args)
     node = CartesianMoveitServer()
-    rclpy.spin(node)
-    rclpy.shutdown()
+    executor = MultiThreadedExecutor()
+    executor.add_node(node)
+    try:
+        executor.spin()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        executor.shutdown()
+        node.destroy_node()
+        if rclpy.ok():
+            rclpy.shutdown()
 
 
 if __name__ == '__main__':
