@@ -121,6 +121,16 @@ def average_quaternions(quats):
     avg = np.mean(aligned, axis=0)
     return avg / np.linalg.norm(avg)
 
+def quat_to_yaw(quat):
+    """Extract rotation about Z (yaw) from a quaternion [qx, qy, qz, qw].
+    Camera tilt is ignored per decision -- this is yaw in camera frame,
+    treated as good enough since the cube's tag-face is assumed to stay
+    roughly aligned with the camera's view axis."""
+    qx, qy, qz, qw = quat
+    # Standard quaternion -> yaw (Z-axis rotation) formula
+    siny_cosp = 2.0 * (qw * qz + qx * qy)
+    cosy_cosp = 1.0 - 2.0 * (qy * qy + qz * qz)
+    return float(np.arctan2(siny_cosp, cosy_cosp))
 
 # ---------------------------------------------------------------------------
 # Dynamic Accumulator & Filter
@@ -316,16 +326,22 @@ class CameraNode(Node):
             if not acc.confirmed:
                 continue
 
+            yaw = quat_to_yaw(acc.confirmed_quat)
+
+            # Camera Frame Output (raw, no correction)
             cam_obj = DetectedObject()
             cam_obj.id = tag_id
             cam_obj.x, cam_obj.y, cam_obj.z = [float(v) for v in acc.confirmed_pos]
+            cam_obj.yaw = yaw
             cam_msg.objects.append(cam_obj)
 
+            # Robot Base Frame Output -- transform, then apply x/y offset + fixed z
             base_xyz = self.transform_to_base(acc.confirmed_pos)
             base_xyz = self.apply_robot_frame_correction(base_xyz)
             base_obj = DetectedObject()
             base_obj.id = tag_id
             base_obj.x, base_obj.y, base_obj.z = [float(v) for v in base_xyz]
+            base_obj.yaw = yaw  # camera tilt ignored per decision -- same value both topics
             base_msg.objects.append(base_obj)
 
         self.pub_camera_frame.publish(cam_msg)

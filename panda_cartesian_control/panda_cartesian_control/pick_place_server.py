@@ -1,4 +1,5 @@
 import threading
+import math
 
 import rclpy
 import rclpy.task
@@ -38,6 +39,7 @@ class PickPlaceServer(Node):
         cb_group = ReentrantCallbackGroup()
 
         self._latest_positions = {}  # tag_id -> [x, y, z]
+        self._latest_yaws = {}       # tag_id -> yaw (rad, about base Z)
         self._positions_lock = threading.Lock()
 
         self._objects_sub = self.create_subscription(
@@ -63,26 +65,62 @@ class PickPlaceServer(Node):
         with self._positions_lock:
             for obj in msg.objects:
                 self._latest_positions[obj.id] = [obj.x, obj.y, obj.z]
+                self._latest_yaws[obj.id] = obj.yaw
 
     def get_position(self, tag_id):
         with self._positions_lock:
             pos = self._latest_positions.get(tag_id)
             return list(pos) if pos is not None else None
 
-    def make_htm(self, xyz):
+    def get_yaw(self, tag_id):
+        with self._positions_lock:
+            return self._latest_yaws.get(tag_id, 0.0)
+
+    def make_htm(self, xyz, yaw=0.0):
+        """Fixed gripper pointing straight down orientation.
+
+        The gripper is rotated in-plane by `yaw` to align its fingers
+        with the detected cube orientation.
+
+        Since a parallel-jaw gripper is symmetric under 180° rotation,
+        equivalent cube orientations are mapped into [-90°, +90°].
+        """
+
+        # Convert yaw to an equivalent angle in [-90°, +90°]
+        yaw_deg = math.degrees(yaw)
+
+        while yaw_deg > 90.0:
+            yaw_deg -= 180.0
+
+        while yaw_deg < -90.0:
+            yaw_deg += 180.0
+
+        yaw = math.radians(yaw_deg)
+
+        c = math.cos(yaw)
+        s = math.sin(yaw)
+
+        r00, r01 = 0.707, -0.707
+        r10, r11 = -0.707, -0.707
+
+        n00 = c * r00 - s * r10
+        n01 = c * r01 - s * r11
+        n10 = s * r00 + c * r10
+        n11 = s * r01 + c * r11
+
         return [
-            0.707, -0.707, 0.0, xyz[0],
-            -0.707, -0.707, 0.0, xyz[1],
+            n00, n01, 0.0, xyz[0],
+            n10, n11, 0.0, xyz[1],
             0.0, 0.0, -1.0, xyz[2],
             0.0, 0.0, 0.0, 1.0,
         ]
 
-    async def send_htm(self, xyz, v_scale=0.2):
+    async def send_htm(self, xyz, v_scale=0.2, yaw=0.0):
         """Send a single htm_motion goal and await completion. Returns
         (success, error, goal_handle) -- goal_handle is returned so a
         caller doing live tracking can cancel it mid-flight."""
         goal = HTMMotion.Goal()
-        goal.htm = self.make_htm(xyz)
+        goal.htm = self.make_htm(xyz, yaw)
         goal.v_scale = v_scale
 
         if not self._htm_client.wait_for_server(timeout_sec=ACTION_SERVER_TIMEOUT_SEC):
@@ -122,9 +160,10 @@ class PickPlaceServer(Node):
         retries = 0
         while retries <= MAX_TRACKING_RETRIES:
             commanded = [current_target[i] + base_xyz[i] for i in range(3)]
+            current_yaw = self.get_yaw(tag_id)
 
             goal_handle = await self._htm_client.send_goal_async(
-                self._make_htm_goal(commanded, v_scale))
+                self._make_htm_goal(commanded, v_scale, current_yaw))
 
             if goal_handle is None:
                 return False, 'htm_motion send_goal_async returned no result'
@@ -170,9 +209,9 @@ class PickPlaceServer(Node):
 
         return False, f'tracking on tag {tag_id} did not settle after {MAX_TRACKING_RETRIES} retries'
 
-    def _make_htm_goal(self, xyz, v_scale):
+    def _make_htm_goal(self, xyz, v_scale, yaw=0.0):
         goal = HTMMotion.Goal()
-        goal.htm = self.make_htm(xyz)
+        goal.htm = self.make_htm(xyz, yaw)
         goal.v_scale = v_scale
         return goal
 
@@ -317,13 +356,14 @@ class PickPlaceServer(Node):
         # the tag had once the hover phase locked in -- no more
         # cancel/resend, so it can't get redirected sideways low down.
         settled_pos = self.get_position(tag_id)
+        settled_yaw = self.get_yaw(tag_id)
         if settled_pos is None:
             return self._fail(goal_handle, result, 'descending to pick', f'no known position for tag {tag_id}')
 
         feedback.stage = 'descending to pick'
         feedback.progress = float(step_i) / total_steps
         goal_handle.publish_feedback(feedback)
-        ok, err, _ = await self.send_htm(settled_pos, v_scale=SPEED_SLOW)
+        ok, err, _ = await self.send_htm(settled_pos, v_scale=SPEED_SLOW, yaw=settled_yaw)
         if not ok:
             return self._fail(goal_handle, result, 'descending to pick', err)
         step_i += 1
